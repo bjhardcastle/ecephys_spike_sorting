@@ -17,7 +17,7 @@ from ...common.utils import read_probe_json, get_repo_commit_date_and_hash, rms
 def run_kilosort(args):
 
     print('ecephys spike sorting: kilosort helper module')
-
+    print(args['kilosort_helper_params'])
     commit_date, commit_time = get_repo_commit_date_and_hash(args['kilosort_helper_params']['kilosort_repository'])
 
     input_file = args['ephys_params']['ap_band_file']
@@ -75,6 +75,17 @@ def run_kilosort(args):
                                              args['ephys_params'], 
                                              args['kilosort_helper_params']['kilosort3_params'])
 
+    elif args['kilosort_helper_params']['kilosort_version'] == 99:
+
+        shutil.copyfile(os.path.join('ecephys_spike_sorting','modules','kilosort_helper','kilosort_main_ultra.m'),
+            os.path.join(args['kilosort_helper_params']['matlab_home_directory'],'kilosort_main_ultra.m'))
+    
+        matlab_file_generator.create_configUltra(args['kilosort_helper_params']['matlab_home_directory'], 
+                                             output_dir_forward_slash, 
+                                             input_file_forward_slash,
+                                             args['ephys_params'], 
+                                             args['kilosort_helper_params']['kilosortUltra_params'])
+
     else:
         return
 
@@ -92,6 +103,9 @@ def run_kilosort(args):
     elif args['kilosort_helper_params']['kilosort_version'] == 3:
         eng.kilosort3_config_file(nargout=0)
         eng.main_kilosort3(nargout=0)
+    elif args['kilosort_helper_params']['kilosort_version'] == 99:
+        eng.kilosortUltra_config_file(nargout=0)
+        eng.kilosort_main_ultra(nargout=0)
 
     execution_time = time.time() - start
 

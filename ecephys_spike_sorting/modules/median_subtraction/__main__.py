@@ -10,8 +10,7 @@ from ...common.utils import read_probe_json, get_repo_commit_date_and_hash
 
 def run_median_subtraction(args):
 
-    print('ecephys spike sorting: median subtraction module')
-
+    print('ccb ecephys spike sorting: median subtraction module {}'.format(args))
     commit_date, commit_hash = get_repo_commit_date_and_hash(args['median_subtraction_params']['median_subtraction_repo'])
 
     mask, offset, scaling, surface_channel, air_channel = read_probe_json(args['common_files']['probe_json'])
@@ -19,7 +18,6 @@ def run_median_subtraction(args):
     logging.info('Running median subtraction')
     
     start = time.time()
-
     subprocess.check_call([args['median_subtraction_params']['median_subtraction_executable'], 
                            args['common_files']['probe_json'], 
                            args['ephys_params']['ap_band_file'],

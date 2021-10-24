@@ -34,7 +34,7 @@ def run_npx_extractor(args):
     arg_list = [args['extract_from_npx_params']['npx_extractor_executable'], 
                            args['extract_from_npx_params']['npx_directory'], 
                            extraction_location]
-    #print(arg_list)
+    print(arg_list)
 
     subprocess.check_call(arg_list)
 
