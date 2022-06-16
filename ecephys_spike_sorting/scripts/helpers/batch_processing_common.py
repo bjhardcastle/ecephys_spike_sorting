@@ -22,7 +22,7 @@ import json
 import xml.etree.ElementTree as ET
 import pandas as pd
 import numpy as np
-
+import pdb
 logging.basicConfig(level = logging.INFO)
 
 
@@ -33,6 +33,10 @@ from helpers.batch_processing_config import get_from_config, get_from_kwargs
 from create_input_json import createInputJson
 from zro import RemoteObject, Proxy
 
+global OEPHYS_V0_6_0 # flag for adjusting directories to accommodate folder structure output by v0.6.0
+
+OEPHYS_V0_6_0 = False # default to False, automatic check further on will update if it looks like a v0.6.0 recording
+
 session = '1044026583_509811_20200818_probeDEF'
 probes_in = ['A', 'B', 'C', 'D', 'E', 'F']
 probe_type = 'PXI'
@@ -40,6 +44,7 @@ class processing_session():
 
     def __init__(self, session_name, probes_in, **kwargs):
         self.session_name = session_name
+        OEPHYS_V0_6_0 = get_from_kwargs('opephys_v0_6_0', kwargs, False)
         self.probe_type = get_from_kwargs('probe_type', kwargs)
         self.WSE_computer = get_from_kwargs('WSE_computer', kwargs)
         self.cortex_only = get_from_kwargs('cortex_only', kwargs, False)
@@ -72,10 +77,26 @@ class processing_session():
 
 
 
-        pxi_slots = OrderedDict()
-
+        pxi_slots = OrderedDict()     
+                                  
         for slot, params in slot_config.items():
-            pxi_slots[str(slot)] = slot_params(int(slot), os.path.join(params['acq_drive'], session_name+'_'+params['suffix']), processing_drive, default_backup1, default_backup2)#S
+            # check session dir exists (oephys v0.6.0 might not give us the expected folder names)
+            try_dir_path = os.path.join(params['acq_drive'], session_name+'_'+params['suffix'])
+            if not os.path.exists(try_dir_path):
+                # we may have a '_probeABC' suffix where we don't need one
+                try_dir_path = os.path.join(params['acq_drive'], session_name)
+                if os.path.exists(try_dir_path):
+                    slot_config[slot]['suffix'] = '' 
+                    pxi_slots[str(slot)] = slot_params(int(slot), os.path.join(params['acq_drive'], session_name), processing_drive, default_backup1, default_backup2)#S
+                else:                
+                    print(f"not found {try_dir_path}")
+                    raise FileNotFoundError
+            else:    
+                # below: slot_params(slot_num,recording_dir,extracted_drive,backup1,backup2)
+                pxi_slots[str(slot)] = slot_params(int(slot), os.path.join(params['acq_drive'], session_name+'_'+params['suffix']), processing_drive, default_backup1, default_backup2)#S
+        
+
+            
         #print(pxi_slots)
         self.pxi_slots = get_from_kwargs('pxi_slots', kwargs, default=pxi_slots)
         #print(self.pxi_slots)
@@ -320,13 +341,27 @@ class processing_session():
             dirpath = path_s(self, slot_or_probe)
         except KeyError as E:
             pxi_slot = self.slot(slot_or_probe)
-            dirpath = path_s(self, pxi_slot)
+            dirpath = path_s(self, pxi_slot)          
+        # check session dir has an npx2 file (indicating pre-v0.6.0 oephys)    
+        if glob.glob(os.path.join(dirpath,"**/*.npx2"), recursive=True):
+            OEPHYS_v0_6_0 = False
+        else:
+            OEPHYS_v0_6_0 = True 
         return dirpath
-
+        
+        """    
+        dat_files_found = glob.glob(os.path.join(dirpath,"**/continuous/**/continuous.dat"), recursive=True)
+        if len(dat_files_found)>6:
+            print("more than 6 continuous.dat files found with glob.glob(os.path.join(dirpath,\"**/continuous/**/continuous.dat\"), recursive=True)")
+            raise ValueError
+        """
+            
     def settings_path(self, slot_or_probe):
         raw_path = self.raw_path(slot_or_probe)
         possible_path = os.path.join(raw_path, 'settings*.xml')
         path = glob.glob(possible_path)[0]
+        if OEPHYS_v0_6_0:
+            path = glob.glob(os.path.join(dirpath,"**/*settings*.xml"), recursive=True)[0]
         return path
 
     def raw_dirname(self, slot_or_probe):

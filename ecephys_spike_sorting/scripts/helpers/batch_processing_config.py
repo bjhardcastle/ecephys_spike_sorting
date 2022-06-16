@@ -2,6 +2,7 @@
 from collections import namedtuple, OrderedDict
 
 config = {
+    # 'opephys_v0_6_0': True,
     'processable_probes': ['A', 'B', 'C'], #'D', 'E', 'F' #'A', 'C', 'D', 'E'
 	'probe_type': 'PXI',
 	'WSE_computer': 'w10dtsm18306',
@@ -19,11 +20,11 @@ config = {
     'slot_config':{
     	2:{
     		'acq_drive': r'\\W10DT05501\A',
-    		'suffix': 'probeABC',
+    		'suffix': 'probeABC', # ignored if 'opephys_v0_6_0': True
     	},
     	3:{
     		'acq_drive': r'\\W10DT05501\B',
-    		'suffix': 'probeDEF',
+    		'suffix': 'probeDEF', # ignored if 'opephys_v0_6_0': True
     	},
     },
     'skip_verify_backup': True,
