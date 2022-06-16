@@ -11,8 +11,8 @@ cortex_only = False
 start_module = 'extract_from_npx'
 end_module = 'cleanup'
 
-default_backup1 = r'\\10.128.50.20\sd7'
-default_backup2 = get_from_config('disk_backup')
+#default_backup1 = r'\\10.128.50.20\sd7'
+#default_backup2 = get_from_config('disk_backup')
 #default_backup1 = os.path.join(get_from_config('network_backup', kwargs), session_name)
 #default_backup2 = get_from_config('disk_backup')
 

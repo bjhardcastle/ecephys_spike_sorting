@@ -3,7 +3,10 @@ import subprocess
 
 from create_input_json import createInputJson
 
-sorted_directories = [r'E:\test_2019-07-25_18-16-48_probeA_sorted']
+sorted_directories = [r'D:\1113954991_578002_20210708_probeA_sorted',
+						r'D:\1113954991_578002_20210708_probeB_sorted',
+						r'D:\1113954991_578002_20210708_probeC_sorted'
+						]
 #npx_directories = [r'L:\766640955_412804_20181022_probeC']
 
 probe_type = 'PXI'
@@ -24,13 +27,13 @@ for directory in sorted_directories:
 	 probe_type=probe_type)
 
 	modules = [ #'extract_from_npx',
-				'depth_estimation']#,
+				#'depth_estimation']#,
 				##'median_subtraction',
-				#'kilosort_helper',
-				#'kilosort_postprocessing',
-				#'noise_templates',
-				#'mean_waveforms',
-				#'quality_metrics']
+				'kilosort_helper',
+				'kilosort_postprocessing',
+				'noise_templates',
+				'mean_waveforms',
+				'quality_metrics']
 
 	for module in modules:
 

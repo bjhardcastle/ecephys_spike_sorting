@@ -1,5 +1,5 @@
 
-from helpers.batch_processing_common_sm_cortex import processing_session
+from helpers.batch_processing_common import processing_session
 from helpers.batch_processing_config import get_from_config, get_from_kwargs
 import sys
 
@@ -12,6 +12,8 @@ cortex_only = False
 
 start_module = 'kilosort_helper'
 end_module = 'cleanup'
+
+ctx_num_channels = 30
 
 #default_backup1 = os.path.join(get_from_config('network_backup', kwargs), session_name)
 #default_backup2 = get_from_config('disk_backup')
@@ -109,6 +111,7 @@ if __name__ == '__main__':
         modules=modules,
         copy_while_waiting_modules=copy_while_waiting_modules,
         final_copy_all_parallel=final_copy_all_parallel,
+        ctx_num_channels = ctx_num_channels,
     start_module = start_module,
     end_module = end_module,
     processable_probes = probes_in
