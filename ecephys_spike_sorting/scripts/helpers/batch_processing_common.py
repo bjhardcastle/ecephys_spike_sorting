@@ -33,9 +33,9 @@ from helpers.batch_processing_config import get_from_config, get_from_kwargs
 from create_input_json import createInputJson
 from zro import RemoteObject, Proxy
 
-global OEPHYS_V0_6_0 # flag for adjusting directories to accommodate folder structure output by v0.6.0
+global OEPHYS_v0_6_0 # flag for adjusting directories to accommodate folder structure output by v0.6.0
 
-OEPHYS_V0_6_0 = False # default to False, automatic check further on will update if it looks like a v0.6.0 recording
+OEPHYS_v0_6_0 = False # default to False, automatic check further on will update if it looks like a v0.6.0 recording
 
 session = '1044026583_509811_20200818_probeDEF'
 probes_in = ['A', 'B', 'C', 'D', 'E', 'F']
@@ -44,7 +44,7 @@ class processing_session():
 
     def __init__(self, session_name, probes_in, **kwargs):
         self.session_name = session_name
-        OEPHYS_V0_6_0 = get_from_kwargs('opephys_v0_6_0', kwargs, False)
+        OEPHYS_v0_6_0 = get_from_kwargs('opephys_v0_6_0', kwargs, False)
         self.probe_type = get_from_kwargs('probe_type', kwargs)
         self.WSE_computer = get_from_kwargs('WSE_computer', kwargs)
         self.cortex_only = get_from_kwargs('cortex_only', kwargs, False)
@@ -80,21 +80,28 @@ class processing_session():
         pxi_slots = OrderedDict()     
                                   
         for slot, params in slot_config.items():
-            # check session dir exists (oephys v0.6.0 might not give us the expected folder names)
-            try_dir_path = os.path.join(params['acq_drive'], session_name+'_'+params['suffix'])
-            if not os.path.exists(try_dir_path):
-                # we may have a '_probeABC' suffix where we don't need one
-                try_dir_path = os.path.join(params['acq_drive'], session_name)
-                if os.path.exists(try_dir_path):
-                    slot_config[slot]['suffix'] = '' 
-                    pxi_slots[str(slot)] = slot_params(int(slot), os.path.join(params['acq_drive'], session_name), processing_drive, default_backup1, default_backup2)#S
-                else:                
-                    print(f"not found {try_dir_path}")
-                    raise FileNotFoundError
-            else:    
-                # below: slot_params(slot_num,recording_dir,extracted_drive,backup1,backup2)
-                pxi_slots[str(slot)] = slot_params(int(slot), os.path.join(params['acq_drive'], session_name+'_'+params['suffix']), processing_drive, default_backup1, default_backup2)#S
+             
+            # below: slot_params(slot_num,recording_dir,extracted_drive,backup1,backup2)
+            pxi_slots[str(slot)] = slot_params(int(slot), os.path.join(params['acq_drive'], session_name+'_'+params['suffix']), processing_drive, default_backup1, default_backup2)#S
         
+        # use the last params set to determine if we have v0.6.0 data (no npx2) + folder structure (addtl subfolders)
+        # first check session dir exists (oephys v0.6.0 might not give us the expected folder names)
+        try_dir_path = os.path.join(params['acq_drive'], session_name+'_'+params['suffix'])
+        if not os.path.exists(try_dir_path):
+            # we may not have a '_probeABC' suffix where we need one - add it if necessary
+            try_short_dir_path = os.path.join(params['acq_drive'], session_name)
+            if os.path.exists(try_short_dir_path):
+                shutil.move(try_short_dir_path, os.path.join(try_dir_path))
+            if not os.path.exists(try_short_dir_path): # re-check after the rename                
+                print(f"not found {try_short_dir_path} or {try_dir_path}")
+                raise FileNotFoundError
+        
+        # check whether we have npx2 files in the session directory - an indicator of older ephys version
+        data_dirpath = os.path.join(params['acq_drive'], session_name+'_'+params['suffix'])
+        if glob.glob(os.path.join(data_dirpath,"**/*.npx2"), recursive=True):
+            OEPHYS_v0_6_0 = False
+        else:
+            OEPHYS_v0_6_0 = True 
 
             
         #print(pxi_slots)
@@ -105,18 +112,6 @@ class processing_session():
         #Whether to verify that the backup exists before starting extraction
         self.skip_verify_backup = get_from_kwargs('skip_verify_backup', kwargs)
 
-
-        processable_probes = get_from_kwargs('processable_probes', kwargs)
-
-        probes_to_process = [probe for probe in probes_in if probe in processable_probes]
-        probe_config = get_from_kwargs('probe_config', kwargs)
-        probes = OrderedDict()
-        for probe in probes_to_process:
-            probe_key = 'probe'+probe
-            probe_slot_params = probe_config[probe]
-            probes[probe_key]=probe_params(probe, probe_slot_params['pxi_slot'], probe_slot_params['num_in_slot'], session_name, default_start, default_end, default_backup1, default_backup2)
-            #print(probes[probe_key].pxi_slot)
-        self.probes = get_from_kwargs('probes', kwargs, default=probes)
 
         modules = [
             #'copy_back_primary_raw_data',
@@ -143,10 +138,32 @@ class processing_session():
            #'move_processed_for_phy',
         ]
         self.modules = get_from_kwargs('modules', kwargs, default=modules)
+        
+        # extraction no longer necessary: v0.6.0 outputs to continuous.dat 
+        if OEPHYS_v0_6_0:
+            for item in ['extract_from_npx','restructure_directories']:
+                if item in self.modules:
+                    if item == default_start:
+                        default_start = self.modules[self.modules.index(item) + 1]
+                    self.modules.remove(item)
+                    
         start_num = self.modules.index(default_start)
         end_num = self.modules.index(default_end)
         self.modules = self.modules[start_num:end_num+1]
 
+        # moved the following sections from eariler so that default_start will be applied to probes too
+        processable_probes = get_from_kwargs('processable_probes', kwargs)
+
+        probes_to_process = [probe for probe in probes_in if probe in processable_probes]
+        probe_config = get_from_kwargs('probe_config', kwargs)
+        probes = OrderedDict()
+        for probe in probes_to_process:
+            probe_key = 'probe'+probe
+            probe_slot_params = probe_config[probe]
+            probes[probe_key]=probe_params(probe, probe_slot_params['pxi_slot'], probe_slot_params['num_in_slot'], session_name, default_start, default_end, default_backup1, default_backup2)
+            #print(probes[probe_key].pxi_slot)
+        self.probes = get_from_kwargs('probes', kwargs, default=probes)
+        
         copy_while_waiting_modules = [
             'cww_primary_backup_raw_data',
             'cww_primary_backup_processed', # need to name these differently because both may be run
@@ -343,25 +360,14 @@ class processing_session():
             pxi_slot = self.slot(slot_or_probe)
             dirpath = path_s(self, pxi_slot)          
         # check session dir has an npx2 file (indicating pre-v0.6.0 oephys)    
-        if glob.glob(os.path.join(dirpath,"**/*.npx2"), recursive=True):
-            OEPHYS_v0_6_0 = False
-        else:
-            OEPHYS_v0_6_0 = True 
         return dirpath
-        
-        """    
-        dat_files_found = glob.glob(os.path.join(dirpath,"**/continuous/**/continuous.dat"), recursive=True)
-        if len(dat_files_found)>6:
-            print("more than 6 continuous.dat files found with glob.glob(os.path.join(dirpath,\"**/continuous/**/continuous.dat\"), recursive=True)")
-            raise ValueError
-        """
             
     def settings_path(self, slot_or_probe):
         raw_path = self.raw_path(slot_or_probe)
         possible_path = os.path.join(raw_path, 'settings*.xml')
         path = glob.glob(possible_path)[0]
         if OEPHYS_v0_6_0:
-            path = glob.glob(os.path.join(dirpath,"**/*settings*.xml"), recursive=True)[0]
+            path = glob.glob(os.path.join(raw_path,"**/*settings*.xml"), recursive=True)[0]
         return path
 
     def raw_dirname(self, slot_or_probe):
@@ -408,6 +414,20 @@ class processing_session():
         probe_list = self.probes_per_slot()[slot_p]
         dirname = self.raw_dirname(probe)+'_extracted'#+'_probe'+('').join(probe_list)
         path = os.path.join(self.sorted_drive(probe), dirname)
+        if OEPHYS_v0_6_0:
+            dirname = self.raw_dirname(probe) # data are already "extracted"
+            found = glob.glob(os.path.join(self.raw_path(probe),"**/structure.oebin"), recursive=True)
+            if len(found) > 1:
+                import pathlib
+                dir_size = []
+                for idx, dir in enumerate(found):
+                    root_directory = os.path.dirname(dir)
+                    dir_size.append(sum(f.stat().st_size for f in root_directory.glob('**/*') if f.is_file()))
+                max_size_idx = dir_size.index(max(dir_size))    
+            else:
+                max_size_idx = 0
+            # todo replace drive with extracted drive (after copying to D)
+            path = os.path.dirname(found[max_size_idx])
         return path
 
     def port(self, probe):
@@ -418,6 +438,7 @@ class processing_session():
         string = 'Neuropix-'+self.probe_type+'-slot'+str(self.slot_num(probe))+'-probe'+num_in_slot
         return string
 
+    #TODO make 0.6.0 probe paths - will have to check multiple recs don't exist  
     def extracted_AP_path(self, probe):
         dirname = self.dir_string(probe)+'-AP'
         path = os.path.join(self.extracted_path_head(probe), 'continuous', dirname)
@@ -1767,7 +1788,7 @@ class processing_session():
                 npx_dirs.add(self.raw_path(probe))
             check_all_space(npx_dirs)
             print('')
-        except Excpetion as E:
+        except Exception as E:
             print('Failed to check space on Acquisition drives')
         return self.session_name, sucess
 
