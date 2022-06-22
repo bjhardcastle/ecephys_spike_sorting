@@ -23,6 +23,7 @@ import xml.etree.ElementTree as ET
 import pandas as pd
 import numpy as np
 import pdb
+import pathlib
 logging.basicConfig(level = logging.INFO)
 
 
@@ -33,18 +34,18 @@ from helpers.batch_processing_config import get_from_config, get_from_kwargs
 from create_input_json import createInputJson
 from zro import RemoteObject, Proxy
 
-global OEPHYS_v0_6_0 # flag for adjusting directories to accommodate folder structure output by v0.6.0
-
-OEPHYS_v0_6_0 = False # default to False, automatic check further on will update if it looks like a v0.6.0 recording
+# global OEPHYS_v0_6_0 # flag for adjusting directories to accommodate folder structure output by v0.6.0
 
 session = '1044026583_509811_20200818_probeDEF'
 probes_in = ['A', 'B', 'C', 'D', 'E', 'F']
 probe_type = 'PXI'
 class processing_session():
 
+    # OEPHYS_v0_6_0 = False # default to False, automatic check further on will update if it looks like a v0.6.0 recording
+
     def __init__(self, session_name, probes_in, **kwargs):
         self.session_name = session_name
-        OEPHYS_v0_6_0 = get_from_kwargs('opephys_v0_6_0', kwargs, False)
+        self.OEPHYS_v0_6_0 = get_from_kwargs('opephys_v0_6_0', kwargs, False)
         self.probe_type = get_from_kwargs('probe_type', kwargs)
         self.WSE_computer = get_from_kwargs('WSE_computer', kwargs)
         self.cortex_only = get_from_kwargs('cortex_only', kwargs, False)
@@ -99,9 +100,9 @@ class processing_session():
         # check whether we have npx2 files in the session directory - an indicator of older ephys version
         data_dirpath = os.path.join(params['acq_drive'], session_name+'_'+params['suffix'])
         if glob.glob(os.path.join(data_dirpath,"**/*.npx2"), recursive=True):
-            OEPHYS_v0_6_0 = False
+            self.OEPHYS_v0_6_0 = False
         else:
-            OEPHYS_v0_6_0 = True 
+            self.OEPHYS_v0_6_0 = True 
 
             
         #print(pxi_slots)
@@ -140,7 +141,7 @@ class processing_session():
         self.modules = get_from_kwargs('modules', kwargs, default=modules)
         
         # extraction no longer necessary: v0.6.0 outputs to continuous.dat 
-        if OEPHYS_v0_6_0:
+        if self.OEPHYS_v0_6_0:
             for item in ['extract_from_npx','restructure_directories']:
                 if item in self.modules:
                     if item == default_start:
@@ -366,7 +367,7 @@ class processing_session():
         raw_path = self.raw_path(slot_or_probe)
         possible_path = os.path.join(raw_path, 'settings*.xml')
         path = glob.glob(possible_path)[0]
-        if OEPHYS_v0_6_0:
+        if self.OEPHYS_v0_6_0:
             path = glob.glob(os.path.join(raw_path,"**/*settings*.xml"), recursive=True)[0]
         return path
 
@@ -383,6 +384,9 @@ class processing_session():
 
     def sorted_drive(self, slot_or_probe):
         def ex_drive_s(self, slot):
+            # if self.OEPHYS_v0_6_0:
+            #     drive = pathlib.Path(self.raw_path(slot)).anchor
+            # else:
             drive = self.pxi_slots[slot].extracted_drive
             return drive
         try:
@@ -396,6 +400,7 @@ class processing_session():
         path = os.path.join(self.sorted_drive(probe), self.sorted_dirname(probe))
         return path
 
+                
     def sorted_AP_path(self, probe):
         path = os.path.join(self.sorted_path(probe), 'continuous', 'Neuropix-'+self.probe_type+'-100.0')
         return path
@@ -414,15 +419,14 @@ class processing_session():
         probe_list = self.probes_per_slot()[slot_p]
         dirname = self.raw_dirname(probe)+'_extracted'#+'_probe'+('').join(probe_list)
         path = os.path.join(self.sorted_drive(probe), dirname)
-        if OEPHYS_v0_6_0:
-            dirname = self.raw_dirname(probe) # data are already "extracted"
-            found = glob.glob(os.path.join(self.raw_path(probe),"**/structure.oebin"), recursive=True)
-            if len(found) > 1:
-                import pathlib
+        if self.OEPHYS_v0_6_0:
+            dirpath = self.raw_path(probe) # data are already "extracted"
+            found = glob.glob(os.path.join(dirpath,"**/structure.oebin"), recursive=True)
+            if len(found) > 1:                
                 dir_size = []
                 for idx, dir in enumerate(found):
                     root_directory = os.path.dirname(dir)
-                    dir_size.append(sum(f.stat().st_size for f in root_directory.glob('**/*') if f.is_file()))
+                    dir_size.append(sum(f.stat().st_size for f in pathlib.Path(root_directory).glob('**/*') if pathlib.Path(f).is_file()))
                 max_size_idx = dir_size.index(max(dir_size))    
             else:
                 max_size_idx = 0
@@ -587,7 +591,10 @@ class processing_session():
                         if os.path.isdir(sorted_dir):
                             extracted_size = dir_size(sorted_dir)
                         else:
-                            raise FileNotFoundError
+                            if self.OEPHYS_v0_6_0:
+                                os.mkdir(sorted_dir) # add jun 21
+                            else:
+                                raise FileNotFoundError
                     except FileNotFoundError as E:
                         print('One of the directories probably doesn\'t exist - check '+sorted_dir)
                         raise E
