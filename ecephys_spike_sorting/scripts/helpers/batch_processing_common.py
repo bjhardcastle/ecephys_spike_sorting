@@ -34,18 +34,18 @@ from helpers.batch_processing_config import get_from_config, get_from_kwargs
 from create_input_json import createInputJson
 from zro import RemoteObject, Proxy
 
-# global OEPHYS_v0_6_0 # flag for adjusting directories to accommodate folder structure output by v0.6.0
 
 session = '1044026583_509811_20200818_probeDEF'
 probes_in = ['A', 'B', 'C', 'D', 'E', 'F']
 probe_type = 'PXI'
 class processing_session():
 
-    # OEPHYS_v0_6_0 = False # default to False, automatic check further on will update if it looks like a v0.6.0 recording
 
     def __init__(self, session_name, probes_in, **kwargs):
         self.session_name = session_name
         self.OEPHYS_v0_6_0 = get_from_kwargs('opephys_v0_6_0', kwargs, False)
+        # are we using oephys >= v0.6.0, with different folder structure? 
+        # default to False, automatic check further on will update if it looks like a v0.6.0 recording
         self.probe_type = get_from_kwargs('probe_type', kwargs)
         self.WSE_computer = get_from_kwargs('WSE_computer', kwargs)
         self.cortex_only = get_from_kwargs('cortex_only', kwargs, False)
@@ -426,9 +426,6 @@ class processing_session():
 
     def sorted_drive(self, slot_or_probe):
         def ex_drive_s(self, slot):
-            # if self.OEPHYS_v0_6_0:
-            #     drive = pathlib.Path(self.raw_path(slot)).anchor
-            # else:
             drive = self.pxi_slots[slot].extracted_drive
             return drive
         try:
