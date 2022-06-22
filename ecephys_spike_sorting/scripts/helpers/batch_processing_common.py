@@ -31,13 +31,15 @@ from helpers.check_data_processing import check_data_processing, check_all_space
 from helpers.batch_processing_config import get_from_config, get_from_kwargs
 
 #import helpers.processing as npxprocess
-from create_input_json import createInputJson
+from create_input_json import createInputJson as createInputJson_KS2
+from create_input_json_ultra import createInputJsonUltra
 from zro import RemoteObject, Proxy
 
 
 session = '1044026583_509811_20200818_probeDEF'
 probes_in = ['A', 'B', 'C', 'D', 'E', 'F']
 probe_type = 'PXI'
+acq_system = 'PXI'
 class processing_session():
 
 
@@ -47,6 +49,12 @@ class processing_session():
         # are we using oephys >= v0.6.0, with different folder structure? 
         # default to False, automatic check further on will update if it looks like a v0.6.0 recording
         self.probe_type = get_from_kwargs('probe_type', kwargs)
+        if self.probe_type=='Ultra':
+            self.createInputJson = createInputJsonUltra
+        else:
+            self.createInputJson = createInputJson_KS2
+
+        self.acq_system = get_from_kwargs('acq_system', kwargs, 'PXI')
         self.WSE_computer = get_from_kwargs('WSE_computer', kwargs)
         self.cortex_only = get_from_kwargs('cortex_only', kwargs, False)
         ### Put read config here??
@@ -77,9 +85,8 @@ class processing_session():
         self.ctx_surface_min = get_from_kwargs('ctx_surface_min', kwargs, 80)
 
 
+        pxi_slots = OrderedDict()
 
-        pxi_slots = OrderedDict()     
-                                  
         for slot, params in slot_config.items():
              
             # below: slot_params(slot_num,recording_dir,extracted_drive,backup1,backup2)
@@ -442,15 +449,15 @@ class processing_session():
 
                 
     def sorted_AP_path(self, probe):
-        path = os.path.join(self.sorted_path(probe), 'continuous', 'Neuropix-'+self.probe_type+'-100.0')
+        path = os.path.join(self.sorted_path(probe), 'continuous', 'Neuropix-'+self.acq_system+'-100.0')
         return path
 
     def sorted_LFP_path(self, probe):
-        path = os.path.join(self.sorted_path(probe), 'continuous', 'Neuropix-'+self.probe_type+'-100.1')
+        path = os.path.join(self.sorted_path(probe), 'continuous', 'Neuropix-'+self.acq_system+'-100.1')
         return path
 
     def sorted_events_path(self, probe):
-        path = os.path.join(self.sorted_path(probe), 'events', 'Neuropix-'+self.probe_type+'-100.0')
+        path = os.path.join(self.sorted_path(probe), 'events', 'Neuropix-'+self.acq_system+'-100.0')
         return path
 
     def extracted_path_head(self, probe):
@@ -479,10 +486,9 @@ class processing_session():
 
     def dir_string(self, probe):
         num_in_slot = self.port(probe)
-        string = 'Neuropix-'+self.probe_type+'-slot'+str(self.slot_num(probe))+'-probe'+num_in_slot
+        string = 'Neuropix-'+self.acq_system+'-slot'+str(self.slot_num(probe))+'-probe'+num_in_slot
         return string
 
-    #TODO make 0.6.0 probe paths - will have to check multiple recs don't exist  
     def extracted_AP_path(self, probe):
         dirname = self.dir_string(probe)+'-AP'
         path = os.path.join(self.extracted_path_head(probe), 'continuous', dirname)
@@ -695,7 +701,7 @@ class processing_session():
             except:
                 backup_size_dict[sorted_drive] = max_c_space_needed
             if psutil.disk_usage(sorted_drive).free < backup_size_dict[sorted_drive]: #TODO make this flexible - it only works since extraction and processing are both on D
-                err_str = 'There is not enough space on the D drive for kilosort to process the largest dataset'
+                err_str = 'There is not enough space on the processing drive (usually D but check config) for kilosort to process the largest dataset'
                 print(err_str)
                 raise ValueError(err_str)
             else: print('There appears to be enough space on the sorting drive '+str(sorted_drive)+ ' for kilosort')
@@ -833,13 +839,14 @@ class processing_session():
                     self.slot_modules[next_module][self.slot(probe)] = "Initiated"
             failed = 0
             try:
+                print('trying to initiate module {}'.format(next_module))
                 session_id = self.session_id(probe)
                 start_string = self.start.strftime("%y.%m.%d.%I.%M.%S")
                 input_json = os.path.join(self.json_directory, session_id  + '_' + probe + '_' +start_string+'_'+ next_module+ '-input.json')
                 output_json = os.path.join(self.json_directory, session_id  + '_' + probe + '_' +start_string+'_'+ next_module + '-output.json')
                 ########################
                 #directory = r'D:\test_2019-07-25_18-16-48_probeA_sorted'
-                #info = createInputJson(input_json,
+                #info = createInputJson_KS2(input_json,
                 #    kilosort_output_directory=os.path.join(directory, 'continuous', 'Neuropix-PXI-100.0'),
                 #    extracted_data_directory=directory,
                 #    probe_type=self.probe_type)
@@ -868,7 +875,8 @@ class processing_session():
                             self.logger_dict[probe].error("Error setting trange for short sort")
                             self.logger_dict[probe].exception(E)
 
-                info = createInputJson(
+
+                info = self.createInputJson(
                     output_file=input_json, 
                     npx_directory=self.raw_path(probe), 
                     extracted_data_directory=self.extracted_path_head(probe),
@@ -878,10 +886,10 @@ class processing_session():
                     probe_type=self.probe_type
                 )
 
-
                 command_string = "python -W ignore -m ecephys_spike_sorting.modules." + next_module + " --input_json " + input_json \
                   + " --output_json " + output_json
-
+                print('attempting to run following command string')
+                print(command_string)
                 # ["python", "-W", "ignore", "-m", "ecephys_spike_sorting.modules." + next_module, 
                 #                        "--input_json", input_json,
                 #                        "--output_json", output_json]
@@ -930,7 +938,7 @@ class processing_session():
                 backup_location = self.sorted_backup2(probe)
                 copy_data(current_location,backup_location, probe,module)
             elif module == 'cleanup':
-                dir_sucess, missing_files_list, mismatch_size_list, missing_backup_list = check_data_processing(self.probe_type, self.raw_path(probe), self.sorted_path(probe), self.raw_backup1(probe), self.raw_backup2(probe), self.sorted_backup1(probe), self.sorted_backup2(probe), self.lims_upload_drive, cortex_only=self.cortex_only)
+                dir_sucess, missing_files_list, mismatch_size_list, missing_backup_list = check_data_processing(self.acq_system, self.raw_path(probe), self.sorted_path(probe), self.raw_backup1(probe), self.raw_backup2(probe), self.sorted_backup1(probe), self.sorted_backup2(probe), self.lims_upload_drive, cortex_only=self.cortex_only)
                 self.success_list.append(dir_sucess)
                 if not(dir_sucess):
                     failed_files = set()
@@ -995,6 +1003,12 @@ class processing_session():
                 edit_mask_for_kilosort(probe)
                 log_mask(probe)
                 self.process_dict[probe][module] = subprocess.Popen(command_string.split(' '), stdout = subprocess.PIPE,stderr = subprocess.PIPE)
+            elif module == 'quality_metrics':
+                print('running quality metrics without PIPE to avoid hanging') #deprecation warnings are filling PIPE and causing script to hang
+                self.process_dict[probe][module] = subprocess.Popen(command_string.split(' '))#, stdout = subprocess.PIPE,stderr = subprocess.PIPE)
+            elif module == 'noise_templates':
+                print('running quality metrics without PIPE to avoid hanging') #deprecation warnings are filling PIPE and causing script to hang
+                self.process_dict[probe][module] = subprocess.Popen(command_string.split(' '))#, stdout = subprocess.PIPE,stderr = subprocess.PIPE)
             else:
                 self.process_dict[probe][module] = subprocess.Popen(command_string.split(' '), stdout = subprocess.PIPE,stderr = subprocess.PIPE)
 
@@ -1078,10 +1092,10 @@ class processing_session():
                 #f.close()
 
         def restructure_directories(probe):
-            print('Probe Type: ', self.probe_type)
+            print('Acq System: ', self.acq_system)
             error_string = 'Unable to rename {src} to {dest}'
             sucess_string = '{src} becomes {dest}'
-            if self.probe_type == 'PXI':
+            if self.acq_system == 'PXI':
                 self.logger_dict[probe].info('Attempting to restructure the extracted data directories')
                 dirs_to_restructure = []
                 dirs_to_restructure.append((self.extracted_AP_path(probe), self.sorted_AP_path(probe)))
@@ -1154,7 +1168,7 @@ class processing_session():
         def get_settings_xml_value(probe, element_name, attribute_name, default):
             settings_path = self.settings_path(probe)
             value = default
-            if self.probe_type == 'PXI':
+            if self.acq_system == 'PXI':
                 slot = str(self.slot_num(probe))
                 port = self.port(probe)
                 try:
@@ -1198,7 +1212,7 @@ class processing_session():
                 with open(json_path, "r") as read_file:
                     probe_json = json.load(read_file)
             except Exception as E:
-                self.logger_dict[probe].warning('Error reading probe_json')
+                self.logger_dict[probe].warning('Error reading probe_json {}'.format(E))
                 with open(json_path, "w") as write_file:
                     probe_json = {}
                     json.dump(probe_json, write_file, indent=4)
@@ -1326,7 +1340,7 @@ class processing_session():
             if probe_json is None:
                 probe_json = read_probe_json(probe)
             #print('probe_info.json: '+str(probe_json))
-            if self.probe_type == 'PXI':
+            if self.acq_system == 'PXI':
                 probe_element = 'PROBE'
             else:
                 probe_element = 'NEUROPIXELS'
@@ -1763,7 +1777,7 @@ class processing_session():
                 kilosort_wait =(next_module == 'kilosort_helper') and (('kilosort_helper' in self.current_modules) or not_next_sort)
                 #print('kilosort_wait: '+str(kilosort_wait))
                 slot_wait = (next_module in self.slot_modules) and not(self.slot_modules[next_module][self.slot(probe)] == "Ready")
-                cleanup_wait = next_module == 'cleanup' and time_elapsed<0 #50400 # and not(self.probes[probe].start_module=='cleanup') # wait 14 hours to cleanup to make sure lims1 upload can grab folders
+                cleanup_wait = next_module == 'cleanup' and time_elapsed<0#50400 and not(self.probes[probe].start_module=='cleanup') # wait 14 hours to cleanup to make sure lims1 upload can grab folders
                 final_copy = next_module == 'final_copy_parallel'
                 wait = kilosort_wait or start_wait or slot_wait or cleanup_wait or final_copy or m_sub_wait
                 #print(wait, kilosort_wait , start_wait , slot_wait , cleanup_wait , final_copy, m_sub_wait)
@@ -1790,9 +1804,9 @@ class processing_session():
                     self.logger_dict[probe].info("Finished processing "+ probe)
 
                 ready_for_next_module = not(busy) and not(wait) and not(self.finished_list[idx]) and (self.failed_dict[probe]==0)
-                #print(busy, wait, not(self.finished_list[idx]), self.failed_dict[probe]==0)
+                #print('Busy: {}, wait: {}, finished {}, failed {}'.format(busy, wait, not(self.finished_list[idx]), self.failed_dict[probe]==0))
                 copy_after_failure = not(busy) and not(self.failed_dict[probe]==0) and (next_module in self.copy_modules)
-                #print(ready_for_next_module , copy_after_failure)
+                #print('Ready for next module {}, copy after failure {}'.format(ready_for_next_module , copy_after_failure))
                 if ready_for_next_module or copy_after_failure:
                     self.current_modules[idx], next_module_info , self.failed_dict[probe] = initiate_next_module(next_module, probe)
 
@@ -1839,47 +1853,47 @@ class processing_session():
             print('Failed to check space on Acquisition drives')
         return self.session_name, sucess
 
-    def get_processing_assitant_proxy(self):
-        computer = os.environ['COMPUTERNAME']
-        port = '1212'
-        print('Creating Proxy for device:Day2_Agent at host: '+computer+' port: '+port+' device name: Day2_Agent')
-        #Create the Proxy for the dummy components
-        fullport = computer+':'+port
-        proxy = Proxy(fullport, serialization='json')
-        ping_result = os.system('ping %s -n 1' % (computer,))
-        if ping_result:
-            print('Host '+computer+' Not Found')
-            # LAN WAKE UP CALL GOES HERE
-        else:
-            print('Host '+computer+' Found')
-        return proxy
+    # def get_processing_assitant_proxy(self):
+    #     computer = os.environ['COMPUTERNAME']
+    #     port = '1212'
+    #     print('Creating Proxy for device:Day2_Agent at host: '+computer+' port: '+port+' device name: Day2_Agent')
+    #     #Create the Proxy for the dummy components
+    #     fullport = computer+':'+port
+    #     proxy = Proxy(fullport, serialization='json')
+    #     ping_result = os.system('ping %s -n 1' % (computer,))
+    #     if ping_result:
+    #         print('Host '+computer+' Not Found')
+    #         # LAN WAKE UP CALL GOES HERE
+    #     else:
+    #         print('Host '+computer+' Found')
+    #     return proxy
 
-    def make_batch_files(self, session_name):
-        proxy = self.get_processing_assitant_proxy()
-        try:
-            proxy.create_bat_files(session_name)
-            print('signaled assistant to create batch file sucessfully')
-        except Exception as E:
-            print('failed to signal assistant to create batch file')
-            print(E)
+    # def make_batch_files(self, session_name):
+    #     proxy = self.get_processing_assitant_proxy()
+    #     try:
+    #         proxy.create_bat_files(session_name)
+    #         print('signaled assistant to create batch file sucessfully')
+    #     except Exception as E:
+    #         print('failed to signal assistant to create batch file')
+    #         print(E)
 
-    def cleanup_DAQs(self):
-        proxy = self.get_processing_assitant_proxy()
-        try:
-            proxy.cleanup_daqs()
-            print('signaled assistant to cleanup daqs sucessfully')
-        except Exception as E:
-            print('failed to signal assistant to cleanup daqs')
-            print(E)
+    # def cleanup_DAQs(self):
+    #     proxy = self.get_processing_assitant_proxy()
+    #     try:
+    #         proxy.cleanup_daqs()
+    #         print('signaled assistant to cleanup daqs sucessfully')
+    #     except Exception as E:
+    #         print('failed to signal assistant to cleanup daqs')
+    #         print(E)
 
-    def assistant_set_session(self, session_name):
-        proxy = self.get_processing_assitant_proxy()
-        try:
-            proxy.set_session_name(session_name)
-            print('signaled assistant to set session sucessfully')
-        except Exception as E:
-            print('failed to signal assistant to set session')
-            print(E)
+    # def assistant_set_session(self, session_name):
+    #     proxy = self.get_processing_assitant_proxy()
+    #     try:
+    #         proxy.set_session_name(session_name)
+    #         print('signaled assistant to set session sucessfully')
+    #     except Exception as E:
+    #         print('failed to signal assistant to set session')
+    #         print(E)
 
     def set_completed(self, session, computer):
         if self.WSE_computer is None:
@@ -1907,5 +1921,5 @@ class processing_session():
             print(E)
                 
 if __name__ == '__main__':
-    processor = processing_session(session_name, probes_in, probe_type)
+    processor = processing_session(session_name, probes_in, acq_system)
     processor.start_processing()
