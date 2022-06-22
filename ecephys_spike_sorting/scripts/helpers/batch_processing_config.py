@@ -2,7 +2,6 @@
 from collections import namedtuple, OrderedDict
 
 config = {
-    # 'opephys_v0_6_0': True,
     'processable_probes': ['A', 'B', 'C'], #'D', 'E', 'F' #'A', 'C', 'D', 'E'
 	'probe_type': 'PXI',
 	'WSE_computer': 'w10dtsm18306',
