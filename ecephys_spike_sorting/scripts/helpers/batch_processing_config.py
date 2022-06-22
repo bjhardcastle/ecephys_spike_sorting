@@ -11,7 +11,7 @@ config = {
     'processing_drive': r'\\W10DT05501\D',
     'disk_backup': r'\\W10DT05515\P',
     'network_backup': r'\\allen\programs\mindscope\workgroups\np-exp', #r'\\10.128.54.20\sd8.3', # r'\\10.128.54.19\sd9',
-    'start_module': 'extract_from_npx',
+    'start_module': 'final_copy_parallel', # 'extract_from_npx',
     'end_module': 'final_copy_parallel',
     'json_directory': r'C:\Users\svc_neuropix\Documents\json_files',
     'ctx_surface_min': 80,

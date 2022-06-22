@@ -297,7 +297,8 @@ class processing_session():
         def move(src,dest):
             if not pathlib.Path(dest).parent.exists():
                 pathlib.Path(dest).parent.mkdir(parents=True)
-            shutil.copy2(src,dest)
+            if not pathlib.Path(src).exists():
+                shutil.copy2(src,dest)
             
         for probe in probes_in:
             print(f"copying v0.6.0 probe{probe} data...")
