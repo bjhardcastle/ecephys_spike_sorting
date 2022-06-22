@@ -125,6 +125,9 @@ class processing_session():
            #'move_processed_for_phy',
         ]
         self.modules = get_from_kwargs('modules', kwargs, default=modules)
+        start_num = self.modules.index(default_start)
+        end_num = self.modules.index(default_end)
+        self.modules = self.modules[start_num:end_num+1]
 
         copy_while_waiting_modules = [
             'cww_primary_backup_raw_data',
@@ -592,7 +595,7 @@ class processing_session():
             except:
                 backup_size_dict[sorted_drive] = max_c_space_needed
             if psutil.disk_usage(sorted_drive).free < backup_size_dict[sorted_drive]: #TODO make this flexible - it only works since extraction and processing are both on D
-                err_str = 'There is not enough space on the D drive for kilosort to process the largest dataset'
+                err_str = 'There is not enough space on the processing drive (usually D but check config) for kilosort to process the largest dataset'
                 print(err_str)
                 raise ValueError(err_str)
             else: print('There appears to be enough space on the sorting drive '+str(sorted_drive)+ ' for kilosort')
@@ -1361,6 +1364,8 @@ class processing_session():
             return count, kilosort_ready_list
 
         def module_ready(probe, module):
+            if not module in self.modules:
+                return False
             prev_accounted_for = previous_main_module_accounted_for(module, probe)
             mod_finished = module_initiated(module, probe)
             mod_scheduled = main_module_scheduled(module, probe)

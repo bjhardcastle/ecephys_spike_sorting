@@ -97,7 +97,8 @@ def createInputJsonUltra(output_file,
             "ap_band_file" : continuous_file,
             "lfp_band_file" : os.path.join(lfp_directory, 'continuous.dat'),
             "reorder_lfp_channels" : probe_type == '3A',
-            "cluster_group_file_name" : "cluster_group.tsv.v2"
+            "cluster_group_file_name" : "cluster_group.tsv.v2",
+            "probe_type": "Ultra",
         }, 
 
         "extract_from_npx_params" : {

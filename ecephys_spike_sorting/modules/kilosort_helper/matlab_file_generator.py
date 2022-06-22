@@ -1,6 +1,7 @@
 import os
         
 def create_chanmap(kilosort_location, EndChan, StartChan = 1, probe_type = '3A', Nchannels = 384, MaskChannels = []):
+    print('creating chanmap with probe type {}'.format(probe_type))
     mask_string = '['
     for channel in MaskChannels:
         mask_string += str(channel+1)

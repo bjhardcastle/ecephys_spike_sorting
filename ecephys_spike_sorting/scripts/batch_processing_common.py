@@ -112,6 +112,11 @@ class processing_session():
         ]
         self.modules = get_from_kwargs('modules', kwargs, default=modules)
 
+        start_num = self.modules.index(default_start)
+        end_num = self.modules.index(default_end)
+        self.modules = self.modules[start_num:end_num+1]
+
+
         copy_while_waiting_modules = [
             'cww_primary_backup_raw_data',
             'cww_primary_backup_processed', # need to name these differently because both may be run
@@ -1255,6 +1260,8 @@ class processing_session():
             return count, kilosort_ready_list
 
         def module_ready(probe, module):
+            if not module in self.modules:
+                return False
             prev_accounted_for = previous_main_module_accounted_for(module, probe)
             mod_finished = module_initiated(module, probe)
             mod_scheduled = main_module_scheduled(module, probe)
