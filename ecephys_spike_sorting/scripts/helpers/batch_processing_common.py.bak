@@ -1279,7 +1279,7 @@ class processing_session():
                         surface_channel = max(min_surface_channel, surface_channel)
                         #make sure it stays within bounds
                         max_chan = min(383, surface_channel+50)
-                        min_chan = max(surface_channel-80, 0)
+                        min_chan = min(surface_channel-80, 250)
                         if not(channel in range(min_chan, max_chan)):
                             mask[channel] = False
                 edit_mask(probe, mask, 'kilosort')
