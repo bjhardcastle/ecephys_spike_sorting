@@ -25,7 +25,7 @@ import numpy as np
 import pdb
 import pathlib
 logging.basicConfig(level = logging.INFO)
-
+        
 
 from helpers.check_data_processing import check_data_processing, check_all_space
 from helpers.batch_processing_config import get_from_config, get_from_kwargs
@@ -149,12 +149,13 @@ class processing_session():
         
         # extraction no longer necessary: v0.6.0 outputs to continuous.dat 
         if self.OEPHYS_v0_6_0:
+            self.copy_v0_6_0_to_sorted_folder_structure(probes_in)
             for item in ['extract_from_npx','restructure_directories']:
                 if item in self.modules:
                     if item == default_start:
                         default_start = self.modules[self.modules.index(item) + 1]
                     self.modules.remove(item)
-            self.copy_v0_6_0_to_sorted_folder_structure(probes_in)
+            
             
         start_num = self.modules.index(default_start)
         end_num = self.modules.index(default_end)
@@ -288,6 +289,7 @@ class processing_session():
         self.start = datetime.datetime.now()    
 
     def copy_v0_6_0_to_sorted_folder_structure(self,probes_in):
+        finished = False
         
         if set(probes_in).intersection({"A","B","C"}):
             pxi_str = '2'
@@ -308,37 +310,39 @@ class processing_session():
             
         rec_root = os.path.dirname(found[max_size_idx])
         dest_dir = pathlib.Path(self.pxi_slots[pxi_str].extracted_drive , self.session_name)
+        
         def move(src,dest):
             if not pathlib.Path(dest).parent.exists():
-                pathlib.Path(dest).parent.mkdir(parents=True)
-            if not pathlib.Path(src).exists():
-                shutil.copy2(src,dest)
+                pathlib.Path(dest).parent.mkdir(parents=True,exist_ok=True)
+            shutil.copy2(src,dest) 
         
-            for probe in probes_in:
-                try:    
-                    print(f"copying v0.6.0 probe{probe} data...")
-                    src = Rf"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-AP\continuous.dat"
-                    dest= Rf"{dest_dir}_probe{probe}_sorted\continuous\Neuropix-PXI-100.0\continuous.dat"
-                    move(src,dest) 
-                    src= fR"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-AP\timestamps.npy"
-                    dest= fR"{dest_dir}_probe{probe}_sorted\continuous\Neuropix-PXI-100.0\ap_timestamps.npy"
-                    move(src,dest)
-                    src= fR"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-LFP\continuous.dat"
-                    dest= fR"{dest_dir}_probe{probe}_sorted\continuous\Neuropix-PXI-100.1\continuous.dat"
-                    move(src,dest)
-                    src= fR"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-LFP\timestamps.npy"
-                    dest= fR"{dest_dir}_probe{probe}_sorted\continuous\Neuropix-PXI-100.1\lfp_timestamps.npy"
-                    move(src,dest)
-                    src= fR"{rec_root}\events\Neuropix-PXI-100.ProbeA-AP\TTL\states.npy"
-                    dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\channel_states.npy"
-                    move(src,dest)
-                    src= fR"{rec_root}\events\Neuropix-PXI-100.ProbeA-AP\TTL\timestamps.npy"
-                    dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\event_timestamps.npy"
-                    move(src,dest)
-                except Exception as e:
-                    print(e)
-                    logging.error(f"failed to copy v0.6.0 files to sorted folders for probe{probe}", exc_info=True)
-            
+        for probe in probes_in:
+            try:    
+                print(f"copying v0.6.0 probe{probe} data...")
+                src = Rf"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-AP\continuous.dat"
+                dest= Rf"{dest_dir}_probe{probe}_sorted\continuous\Neuropix-PXI-100.0\continuous.dat"
+                move(src,dest) 
+                src= fR"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-AP\timestamps.npy"
+                dest= fR"{dest_dir}_probe{probe}_sorted\continuous\Neuropix-PXI-100.0\ap_timestamps.npy"
+                move(src,dest)
+                src= fR"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-LFP\continuous.dat"
+                dest= fR"{dest_dir}_probe{probe}_sorted\continuous\Neuropix-PXI-100.1\continuous.dat"
+                move(src,dest)
+                src= fR"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-LFP\timestamps.npy"
+                dest= fR"{dest_dir}_probe{probe}_sorted\continuous\Neuropix-PXI-100.1\lfp_timestamps.npy"
+                move(src,dest)
+                src= fR"{rec_root}\events\Neuropix-PXI-100.ProbeA-AP\TTL\states.npy"
+                dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\channel_states.npy"
+                move(src,dest)
+                src= fR"{rec_root}\events\Neuropix-PXI-100.ProbeA-AP\TTL\timestamps.npy"
+                dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\event_timestamps.npy"
+                move(src,dest)
+                finished = True
+            except Exception as e:
+                print(e)
+                logging.error(f"failed to copy v0.6.0 files to sorted folders for probe{probe}", exc_info=True)
+                finished = False
+        return finished     
     
     def create_file_handler(self, level_string,level_idx,limsID,probe):
         file_name = limsID+'_'+datetime.datetime.now().strftime("%y.%m.%d.%I.%M.%S")+'_'+level_string+'_'+probe+".log"
@@ -616,7 +620,7 @@ class processing_session():
                 copy_raw2 = module_included(module_list, ['secondary', 'raw'])
                 copy_processed2 = module_included(module_list, ['secondary', 'processed'])
                 kilosort=module_included(module_list, ['kilosort_helper'])
-                extract = module_included(module_list, ['extract_from_npx'])
+                extract = module_included(module_list, ['extract_from_npx'])    
                 print('module_list: ', str(module_list))
                 print('copy_raw: ', copy_raw, ', copy_processed: ', copy_processed, ', copy_raw2: ', copy_raw2, ', copy_processed2: ', copy_processed2)
                 #print(extract)
@@ -631,6 +635,7 @@ class processing_session():
                 sorted_backup_dir = self.sorted_backup1(probe)
                 backup_dir2 = self.raw_backup2(probe)
                 sorted_backup_dir2 = self.sorted_backup2(probe)
+                
                 if ('copy_raw_data' in npx_module_dict[probe] or 'extract_from_npx' in npx_module_dict[probe] or 'restructure_directories' in npx_module_dict[probe]):
                     try:
                         print(sorted_drive)
@@ -649,8 +654,13 @@ class processing_session():
                         if os.path.isdir(sorted_dir):
                             extracted_size = dir_size(sorted_dir)
                         else:
-                            if self.OEPHYS_v0_6_0:
-                                os.mkdir(sorted_dir) # add jun 21
+                            if self.OEPHYS_v0_6_0:                                
+                                self.copy_v0_6_0_to_sorted_folder_structure([str(probe.replace('probe',''))])
+                                if os.path.isdir(sorted_dir):
+                                    extracted_size = dir_size(sorted_dir)
+                                else:
+                                    print('Error copying probe'+probe+' to '+sorted_dir)
+                                    raise FileNotFoundError
                             else:
                                 raise FileNotFoundError
                     except FileNotFoundError as E:
