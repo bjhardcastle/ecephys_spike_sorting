@@ -84,7 +84,7 @@ if __name__ == '__main__':
   try:
     session_name = args.session
     print(session_name)
-  except exception as E:
+  except Exception as E:
     raise(ValueError)
     print('No arguments found in sys call, using session name from py file instead')
 
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     if not(args.probes is None):
       probes_in = list(args.probes)
     print(probes_in)
-  except exception as E:
+  except Exception as E:
     raise(ValueError)
     print('No probes found in sys call, using probes from config file instead')
 
@@ -100,7 +100,7 @@ if __name__ == '__main__':
     if not(args.cortex is None):
       cortex_only = True
     print("cortex only", cortex_only)
-  except exception as E:
+  except Exception as E:
     raise(ValueError)
     print('No cortex only found in sys call, using flag from py file instead')
 

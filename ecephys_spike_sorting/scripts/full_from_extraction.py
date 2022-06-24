@@ -24,7 +24,7 @@ modules = [
    'median_subtraction',
    'kilosort_helper',
    'noise_templates',
-   'mean_waveforms',
+   'mean_waveforms', #PUT THIS BACK IN FOR REGULAR SORTING!!!!!
    'quality_metrics',
    'add_noise_class_to_metrics',
    'copy_logs', 
@@ -37,7 +37,6 @@ modules = [
    #'primary_processed_lims_only',
    #'move_processed_for_phy',
 ]
-
 
 copy_while_waiting_modules = [
     'cww_primary_backup_raw_data',

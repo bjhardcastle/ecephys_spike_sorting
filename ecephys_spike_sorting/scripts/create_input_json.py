@@ -123,7 +123,7 @@ def createInputJson(output_file,
             "air_gap" : 100,
             "time_interval" : 5,
             "skip_s_per_pass" : 100,
-            "start_time" : 150,
+            "start_time" : 150
         }, 
 
         "median_subtraction_params" : {

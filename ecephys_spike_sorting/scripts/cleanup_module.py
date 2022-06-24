@@ -24,7 +24,7 @@ modules = [
    'median_subtraction',
    'kilosort_helper',
    'noise_templates',
-   'mean_waveforms',
+   'mean_waveforms', #PUT THIS BACK IN FOR REGULAR SORTING!!!!!
    'quality_metrics',
    'add_noise_class_to_metrics',
    'copy_logs', 
@@ -53,29 +53,29 @@ final_copy_all_parallel = [
     #'final_secondary_backup_processed'
 ]
 #slot_config:{
-#       2:{
-#           'acq_drive':os.path.join(get_from_kwargs('network_backup', kwargs), session_name, session_name+'probeABC'),
-#           'suffix': 'probeABC',
-#       },
-#       3:{
-#           'acq_drive':os.path.join(get_from_kwargs('network_backup', kwargs), session_name, session_name+'probeDEF'),
-#           'suffix': 'probeDEF',
-#       },
+#     2:{
+#       'acq_drive':os.path.join(get_from_kwargs('network_backup', kwargs), session_name, session_name+'probeABC'),
+#       'suffix': 'probeABC',
+#     },
+#     3:{
+#       'acq_drive':os.path.join(get_from_kwargs('network_backup', kwargs), session_name, session_name+'probeDEF'),
+#       'suffix': 'probeDEF',
+#     },
 #    }
 
 
 if __name__ == '__main__':
   try:
     session_name = sys.argv[1]
-  except exception as E:
+  except Exception as E:
     print('No arguments found in sys call, using session name from py file instead')
   processor = processing_session(
     session_name, 
     probes_in, 
-        cortex_only=cortex_only,
-        modules=modules,
-        copy_while_waiting_modules=copy_while_waiting_modules,
-        final_copy_all_parallel=final_copy_all_parallel,
+    cortex_only=cortex_only,
+    modules=modules,
+    copy_while_waiting_modules=copy_while_waiting_modules,
+    final_copy_all_parallel=final_copy_all_parallel,
     start_module = start_module,
     end_module = end_module
     )
