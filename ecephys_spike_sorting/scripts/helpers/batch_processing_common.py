@@ -288,7 +288,14 @@ class processing_session():
         self.start = datetime.datetime.now()    
 
     def copy_v0_6_0_to_sorted_folder_structure(self,probes_in):
-        dirpath = self.pxi_slots['2'][1]
+        
+        if set(probes_in).intersection({"A","B","C"}):
+            pxi_str = '2'
+        elif set(probes_in).intersection({"D","E","F"}):
+            pxi_str ='3'
+        
+        dirpath = self.pxi_slots[pxi_str][1]
+            
         found = glob.glob(os.path.join(dirpath,"**/structure.oebin"), recursive=True)
         if len(found) > 1:                
             dir_size = []
@@ -298,35 +305,40 @@ class processing_session():
             max_size_idx = dir_size.index(max(dir_size))    
         else:
             max_size_idx = 0
+            
         rec_root = os.path.dirname(found[max_size_idx])
-        #TODO replace pxi_slots['2'] with var from config or similar
-        dest_dir = pathlib.Path(self.pxi_slots['2'].extracted_drive , self.session_name)
+        dest_dir = pathlib.Path(self.pxi_slots[pxi_str].extracted_drive , self.session_name)
         def move(src,dest):
             if not pathlib.Path(dest).parent.exists():
                 pathlib.Path(dest).parent.mkdir(parents=True)
             if not pathlib.Path(src).exists():
                 shutil.copy2(src,dest)
+        
+            for probe in probes_in:
+                try:    
+                    print(f"copying v0.6.0 probe{probe} data...")
+                    src = Rf"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-AP\continuous.dat"
+                    dest= Rf"{dest_dir}_probe{probe}_sorted\continuous\Neuropix-PXI-100.0\continuous.dat"
+                    move(src,dest) 
+                    src= fR"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-AP\timestamps.npy"
+                    dest= fR"{dest_dir}_probe{probe}_sorted\continuous\Neuropix-PXI-100.0\ap_timestamps.npy"
+                    move(src,dest)
+                    src= fR"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-LFP\continuous.dat"
+                    dest= fR"{dest_dir}_probe{probe}_sorted\continuous\Neuropix-PXI-100.1\continuous.dat"
+                    move(src,dest)
+                    src= fR"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-LFP\timestamps.npy"
+                    dest= fR"{dest_dir}_probe{probe}_sorted\continuous\Neuropix-PXI-100.1\lfp_timestamps.npy"
+                    move(src,dest)
+                    src= fR"{rec_root}\events\Neuropix-PXI-100.ProbeA-AP\TTL\states.npy"
+                    dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\channel_states.npy"
+                    move(src,dest)
+                    src= fR"{rec_root}\events\Neuropix-PXI-100.ProbeA-AP\TTL\timestamps.npy"
+                    dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\event_timestamps.npy"
+                    move(src,dest)
+                except Exception as e:
+                    print(e)
+                    logging.error(f"failed to copy v0.6.0 files to sorted folders for probe{probe}", exc_info=True)
             
-        for probe in probes_in:
-            print(f"copying v0.6.0 probe{probe} data...")
-            src = Rf"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-AP\continuous.dat"
-            dest= Rf"{dest_dir}_probe{probe}_sorted\continuous\Neuropix-PXI-100.0\continuous.dat"
-            move(src,dest) 
-            src= fR"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-AP\timestamps.npy"
-            dest= fR"{dest_dir}_probe{probe}_sorted\continuous\Neuropix-PXI-100.0\ap_timestamps.npy"
-            move(src,dest)
-            src= fR"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-LFP\continuous.dat"
-            dest= fR"{dest_dir}_probe{probe}_sorted\continuous\Neuropix-PXI-100.1\continuous.dat"
-            move(src,dest)
-            src= fR"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-LFP\timestamps.npy"
-            dest= fR"{dest_dir}_probe{probe}_sorted\continuous\Neuropix-PXI-100.1\lfp_timestamps.npy"
-            move(src,dest)
-            src= fR"{rec_root}\events\Neuropix-PXI-100.ProbeA-AP\TTL\states.npy"
-            dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\channel_states.npy"
-            move(src,dest)
-            src= fR"{rec_root}\events\Neuropix-PXI-100.ProbeA-AP\TTL\timestamps.npy"
-            dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\event_timestamps.npy"
-            move(src,dest)
     
     def create_file_handler(self, level_string,level_idx,limsID,probe):
         file_name = limsID+'_'+datetime.datetime.now().strftime("%y.%m.%d.%I.%M.%S")+'_'+level_string+'_'+probe+".log"
