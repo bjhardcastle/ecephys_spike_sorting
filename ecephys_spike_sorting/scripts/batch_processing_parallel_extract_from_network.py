@@ -430,11 +430,11 @@ def process_npx(session_name):
 		try:
 			with open(json_path, "r") as read_file:
 				probe_json = json.load(read_file)
-		except exception as E:
+		except Exception as E:
 			logger_dict[npx_directory].exception('Error reading probe_json')
 		try:
 			probe_json = verify_mask(probe_json)
-		except exception as E:
+		except Exception as E:
 			logger_dict[npx_directory].exception('Error Verifying the mask and setting to default if too many masked')
 		if not('software' in probe_json):
 			probe_json["software"] =  {

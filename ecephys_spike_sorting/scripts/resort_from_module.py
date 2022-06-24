@@ -89,7 +89,7 @@ if __name__ == '__main__':
   try:
     session_name = args.session
     print(session_name)
-  except exception as E:
+  except Exception as E:
     raise(ValueError)
     print('No arguments found in sys call, using session name from py file instead')
 
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     if not(args.probes is None):
       probes_in = list(args.probes)
     print(probes_in)
-  except exception as E:
+  except Exception as E:
     raise(ValueError)
     print('No probes found in sys call, using probes from config file instead')
 
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     if not(args.start_module is None):
       start_module = args.start_module
     print("starting with module", start_module)
-  except exception as E:
+  except Exception as E:
     raise(ValueError)
     print('No start module found in sys call, using from py file instead')
 

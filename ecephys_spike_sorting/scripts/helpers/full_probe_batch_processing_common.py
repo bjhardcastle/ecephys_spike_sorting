@@ -961,7 +961,7 @@ class processing_session():
                 self.logger_dict[probe].info('Renaming the depth image to be probe specific'+png_path)
                 new_png_path = os.path.join(self.sorted_path(probe),'probe_depth_'+self.probe_letter(probe)+'.png')
                 os.rename(png_path, new_png_path)
-            except exception as E:
+            except Exception as E:
                 self.logger_dict[probe].info('Error Renaming the depth image to be probe specific'+png_path)
             return serial_number
 

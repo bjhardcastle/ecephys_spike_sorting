@@ -67,7 +67,7 @@ final_copy_all_parallel = [
 if __name__ == '__main__':
   try:
     session_name = sys.argv[1]
-  except exception as E:
+  except Exception as E:
     print('No arguments found in sys call, using session name from py file instead')
   processor = processing_session(
     session_name, 
