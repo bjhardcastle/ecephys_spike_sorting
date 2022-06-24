@@ -9,7 +9,7 @@ config = {
     'slot_params': namedtuple('slot_params',['slot_num', 'recording_dir', 'extracted_drive','backup1','backup2']),
     'lims_upload_drive': r'\\W10DT05501\E', #r'C:\data\temp', 
     'processing_drive': r'D:',#r'C:\data\extraction',#r'\\10.128.54.20\sd8.3\1128517077_565581_20210915', #r'C:\data\extraction',
-    'disk_backup': r'\\W10DT05515\P',#r'D:',
+    'disk_backup': r'\\W10DT9I8QD3D\extraction',#r'D:',
     'network_backup': r'\\allen\programs\mindscope\workgroups\np-exp', #r"C:\Users\svc_neuropix\Desktop\1128517077_565581_20210915_quality_metrics", #r\\10.128.54.19\sd9,
     'start_module': 'extract_from_npx',
     'end_module': 'final_copy_parallel', #'cleanup',
