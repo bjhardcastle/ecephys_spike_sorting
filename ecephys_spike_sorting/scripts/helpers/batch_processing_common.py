@@ -33,7 +33,7 @@ from helpers.batch_processing_config import get_from_config, get_from_kwargs
 #import helpers.processing as npxprocess
 from create_input_json import createInputJson as createInputJson_KS2
 from create_input_json_ultra import createInputJsonUltra
-from zro import RemoteObject, Proxy
+# from zro import RemoteObject, Proxy # unused - not installed on sorting pc (sorting conda env)
 
 
 session = '1044026583_509811_20200818_probeDEF'
