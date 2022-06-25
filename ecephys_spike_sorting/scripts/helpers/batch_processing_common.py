@@ -331,11 +331,17 @@ class processing_session():
                 src= fR"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-LFP\timestamps.npy"
                 dest= fR"{dest_dir}_probe{probe}_sorted\continuous\Neuropix-PXI-100.1\lfp_timestamps.npy"
                 move(src,dest)
-                src= fR"{rec_root}\events\Neuropix-PXI-100.ProbeA-AP\TTL\states.npy"
+                src= fR"{rec_root}\events\Neuropix-PXI-100.Probe{probe}-AP\TTL\states.npy"
                 dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\channel_states.npy"
                 move(src,dest)
-                src= fR"{rec_root}\events\Neuropix-PXI-100.ProbeA-AP\TTL\timestamps.npy"
+                src= fR"{rec_root}\events\Neuropix-PXI-100.Probe{probe}-AP\TTL\timestamps.npy"
                 dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\event_timestamps.npy"
+                move(src,dest)
+                src= fR"{rec_root}\events\Neuropix-PXI-100.Probe{probe}-LFP\TTL\states.npy"
+                dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.1\TTL_1\channel_states.npy"
+                move(src,dest)
+                src= fR"{rec_root}\events\Neuropix-PXI-100.Probe{probe}-LFP\TTL\timestamps.npy"
+                dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.1\TTL_1\event_timestamps.npy"
                 move(src,dest)
                 finished = True
             except Exception as e:
