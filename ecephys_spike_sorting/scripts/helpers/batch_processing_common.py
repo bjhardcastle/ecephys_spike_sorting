@@ -343,6 +343,24 @@ class processing_session():
                 src= fR"{rec_root}\events\Neuropix-PXI-100.Probe{probe}-LFP\TTL\timestamps.npy"
                 dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.1\TTL_1\event_timestamps.npy"
                 move(src,dest)
+                src= fR"{rec_root}\events\Neuropix-PXI-100.Probe{probe}-AP\TTL\sample_numbers.npy"
+                dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\sample_numbers.npy"
+                move(src,dest)
+                src= fR"{rec_root}\events\Neuropix-PXI-100.Probe{probe}-AP\TTL\full_words.npy"
+                dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\full_words.npy"
+                move(src,dest)
+                src= fR"{rec_root}\events\Neuropix-PXI-100.Probe{probe}-LFP\TTL\states.npy"
+                dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.1\TTL_1\channel_states.npy"
+                move(src,dest)
+                src= fR"{rec_root}\events\Neuropix-PXI-100.Probe{probe}-LFP\TTL\timestamps.npy"
+                dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.1\TTL_1\event_timestamps.npy"
+                move(src,dest)
+                src= fR"{rec_root}\events\Neuropix-PXI-100.Probe{probe}-LFP\TTL\sample_numbers.npy"
+                dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.1\TTL_1\sample_numbers.npy"
+                move(src,dest)
+                src= fR"{rec_root}\events\Neuropix-PXI-100.Probe{probe}-LFP\TTL\full_words.npy"
+                dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.1\TTL_1\full_words.npy"
+                move(src,dest)
                 finished = True
             except Exception as e:
                 print(e)
@@ -890,7 +908,7 @@ class processing_session():
                             start = min(max(0, self.file_length_s-8*60), 17.5*60)
                             trange = '['+str(start)+' '+str(self.file_length_s)+']'
                         except Exception as E:
-                            try:
+                            try:S
                                 start = 17.5*60
                                 trange = '['+str(start)+' inf]'
                             except Exception as E:
