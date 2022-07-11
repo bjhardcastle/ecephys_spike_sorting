@@ -908,7 +908,7 @@ class processing_session():
                             start = min(max(0, self.file_length_s-8*60), 17.5*60)
                             trange = '['+str(start)+' '+str(self.file_length_s)+']'
                         except Exception as E:
-                            try:S
+                            try:
                                 start = 17.5*60
                                 trange = '['+str(start)+' inf]'
                             except Exception as E:
