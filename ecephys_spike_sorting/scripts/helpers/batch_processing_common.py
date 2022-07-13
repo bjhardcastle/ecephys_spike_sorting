@@ -334,9 +334,25 @@ class processing_session():
                 src= fR"{rec_root}\events\Neuropix-PXI-100.Probe{probe}-AP\TTL\states.npy"
                 dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\channel_states.npy"
                 move(src,dest)
-                src= fR"{rec_root}\events\Neuropix-PXI-100.Probe{probe}-AP\TTL\timestamps.npy"
+                src= fR"{rec_root}\events\Neuropix-PXI-100.Probe{probe}-AP\TTL\sample_numbers.npy"
                 dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\event_timestamps.npy"
                 move(src,dest)
+                
+                # adjust the events sample_numbers AKA event_timestamps
+                # see https://gist.github.com/bjhardcastle/e972d59f482a549f312047221cd8eccb
+                file = fR"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-AP\sample_numbers.npy"
+                with open(file,'rb') as f:
+                    continuous_sample_numbers = np.load(f,mmap_mode='r')
+                first_sample = continuous_sample_numbers[0]
+                
+                file = fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\event_timestamps.npy"
+                with open(file,'rb') as f:
+                    event_timestamps = np.load(f)
+                    
+                event_timestamps -= first_sample
+                with open(file,'wb') as f:
+                    np.save(f, event_timestamps)
+
                 src= fR"{rec_root}\events\Neuropix-PXI-100.Probe{probe}-AP\TTL\sample_numbers.npy"
                 dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\sample_numbers.npy"
                 move(src,dest)
