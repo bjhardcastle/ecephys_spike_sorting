@@ -149,7 +149,7 @@ class processing_session():
         
         # extraction no longer necessary: v0.6.0 outputs to continuous.dat 
         if self.OEPHYS_v0_6_0:
-            self.copy_v0_6_0_to_sorted_folder_structure(probes_in)
+            # self.copy_v0_6_0_to_sorted_folder_structure(probes_in)
             for item in ['extract_from_npx','restructure_directories']:
                 if item in self.modules:
                     if item == default_start:
@@ -315,7 +315,7 @@ class processing_session():
             if not pathlib.Path(dest).parent.exists():
                 pathlib.Path(dest).parent.mkdir(parents=True,exist_ok=True)
             shutil.copy2(src,dest) 
-        
+            
         for probe in probes_in:
             try:    
                 print(f"copying v0.6.0 probe{probe} data...")
