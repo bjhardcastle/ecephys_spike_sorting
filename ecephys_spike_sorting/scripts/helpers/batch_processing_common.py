@@ -149,7 +149,7 @@ class processing_session():
         
         # extraction no longer necessary: v0.6.0 outputs to continuous.dat 
         if self.OEPHYS_v0_6_0:
-            # self.copy_v0_6_0_to_sorted_folder_structure(probes_in)
+            self.copy_v0_6_0_to_sorted_folder_structure(probes_in)
             for item in ['extract_from_npx','restructure_directories']:
                 if item in self.modules:
                     if item == default_start:
@@ -315,7 +315,7 @@ class processing_session():
             if not pathlib.Path(dest).parent.exists():
                 pathlib.Path(dest).parent.mkdir(parents=True,exist_ok=True)
             shutil.copy2(src,dest) 
-            
+        
         for probe in probes_in:
             try:    
                 print(f"copying v0.6.0 probe{probe} data...")
@@ -334,7 +334,7 @@ class processing_session():
                 src= fR"{rec_root}\events\Neuropix-PXI-100.Probe{probe}-AP\TTL\states.npy"
                 dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\channel_states.npy"
                 move(src,dest)
-                src= fR"{rec_root}\events\Neuropix-PXI-100.Probe{probe}-AP\TTL\timestamps.npy"
+                src= fR"{rec_root}\events\Neuropix-PXI-100.Probe{probe}-AP\TTL\sample_numbers.npy"
                 dest= fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\event_timestamps.npy"
                 move(src,dest)
                 
@@ -924,7 +924,7 @@ class processing_session():
                     npx_directory=self.raw_path(probe), 
                     extracted_data_directory=self.extracted_path_head(probe),
                     lfp_directory = self.sorted_LFP_path(probe),
-                    kilosort_output_directory=self.sorted_AP_path(probe), 
+                    kilosort_output_directory=self.sorted_AP_path(probe),
                     trange = trange,
                     probe_type=self.probe_type
                 )
