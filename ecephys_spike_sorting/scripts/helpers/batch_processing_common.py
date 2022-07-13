@@ -341,8 +341,7 @@ class processing_session():
                 # adjust the events sample_numbers AKA event_timestamps
                 # see https://gist.github.com/bjhardcastle/e972d59f482a549f312047221cd8eccb
                 file = fR"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-AP\sample_numbers.npy"
-                with open(file,'rb') as f:
-                    continuous_sample_numbers = np.load(f,mmap_mode='r')
+                continuous_sample_numbers = np.load(file,mmap_mode='r')
                 first_sample = continuous_sample_numbers[0]
                 
                 file = fR"{dest_dir}_probe{probe}_sorted\events\Neuropix-PXI-100.0\TTL_1\event_timestamps.npy"
