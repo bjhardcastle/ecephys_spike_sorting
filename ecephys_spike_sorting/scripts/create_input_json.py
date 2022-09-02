@@ -22,7 +22,7 @@ def createInputJson(output_file,
                     kilosort_output_directory=None, 
                     kilosort_output_tmp=None, 
                     trange = '[0 inf]',
-                    probe_type='3A'):
+                    probe_type='PXI'):
 
     if kilosort_output_directory is None \
          and extracted_data_directory is None \

@@ -42,14 +42,14 @@ def create_settings_json(input_file):
                 neuropix['error'] = 'probe info not found'
             
             sp0 = {}
-            sp0['name'] = 'Neuropix-3a-100.0'
+            sp0['name'] = 'Neuropix-PXI-100.0'
             sp0['type'] = 'AP band'
             sp0['num_channels'] = 384
             sp0['sample_rate'] = 30000.0
             sp0['bit_volts'] = 0.195
             
             sp1 = {}
-            sp1['name'] = 'Neuropix-3a-100.1'
+            sp1['name'] = 'Neuropix-PXI-100.1'
             sp1['type'] = 'LFP band'
             sp1['num_channels'] = 384
             sp1['sample_rate'] = 2500.0

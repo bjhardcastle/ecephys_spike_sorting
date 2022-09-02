@@ -1120,7 +1120,7 @@ class processing_session():
                 probe_info = probe_json['probe']
             else:
                 probe_info = {
-                    "phase" : "3a", 
+                    "phase" : "1.0", 
                     "ap gain" : get_settings_xml_value(probe, probe_element, 'apGainValue',"500x"),
                     "lfp gain" : get_settings_xml_value(probe, probe_element, 'lfpGainValue',"250x"),
                     "reference channel" : get_settings_xml_value(probe, probe_element, 'referenceChannel',"Ext"),
@@ -1132,14 +1132,14 @@ class processing_session():
 
                     "subprocessors" :[
                         {
-                            "name" : "Neuropix-3a-100.0",
+                            "name" : "Neuropix-PXI-100.0",
                             "type" : "AP band",
                             "num channels" : 384,
                             "sample_rate" : 30000.0,
                             "bit volts" : 0.195
                         },
                         {
-                            "name" : "Neuropix-3a-100.1",
+                            "name" : "Neuropix-PXI-100.1",
                             "type" : "LFP band",
                             "num channels" : 384,
                             "sample_rate" : 2500.0,
