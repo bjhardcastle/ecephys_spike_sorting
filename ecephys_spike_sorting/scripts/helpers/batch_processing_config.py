@@ -7,18 +7,18 @@ config = {
 	'WSE_computer': 'W10DTSM18306',
     'probe_params': namedtuple('probe_params',['probe_letter', 'pxi_slot', 'num_in_slot', 'session','start_module','end_module','backup1','backup2']),
     'slot_params': namedtuple('slot_params',['slot_num', 'recording_dir', 'extracted_drive','backup1','backup2']),
-    'lims_upload_drive': r'\\W10DT05501\E', #r'C:\data\temp', 
+    'lims_upload_drive': r'C:\data\temp', 
     'processing_drive': r'C:\data\extraction',#r'\\10.128.54.20\sd8.3\1128517077_565581_20210915', #r'C:\data\extraction',
     'disk_backup': r'D:',
     'network_backup': r'\\allen\programs\mindscope\workgroups\np-exp', #r"C:\Users\svc_neuropix\Desktop\1128517077_565581_20210915_quality_metrics", #r\\10.128.54.19\sd9,
     'start_module': 'extract_from_npx',
-    'end_module': 'final_copy_parallel', #'cleanup',
+    'end_module': 'cleanup', # 'final_copy_parallel', #'cleanup',
     'json_directory': r'C:\Users\svc_neuropix\Documents\json_files',
     'ctx_surface_min': 80,
     'ctx_surface_max': 240,
     'slot_config':{
     	2:{
-    		'acq_drive': r'\\W10DT05501\A',
+    		'acq_drive':  r'\\W10DT05501\A',
     		'suffix': 'probeABC',
     	},
     	3:{
