@@ -95,6 +95,12 @@ To leave the pipenv virtual environment, simply type:
 
 ### Windows
 
+Update - for no pipenv install:
+```
+    conda install --name sorting --file spec-file.txt
+    pip install -r requirements.txt
+```
+
 ```shell
     $ pip install --user pipenv
     $ set PIPENV_VENV_IN_PROJECT=1
