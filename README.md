@@ -98,6 +98,7 @@ To leave the pipenv virtual environment, simply type:
 Update - for no pipenv install:
 ```
     conda create -n sorting
+    conda activate sorting
     conda install --name sorting --file spec-file.txt
     pip install -r requirements.txt
 ```
