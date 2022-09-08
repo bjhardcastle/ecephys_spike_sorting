@@ -102,6 +102,19 @@ Update - for no pipenv install:
     conda install --name sorting --file spec-file.txt
     pip install -r requirements.txt
 ```
+For installing matlab engine:
+- find path to python.exe for the newly-created conda env 'sorting'
+- Properties>Compatibility> Run as admin
+- Launch Matlab 2021a as admin
+- In Matlab run the following, replacein python.exe with the full path to the 'sorting' env python.exe:
+```
+cd (fullfile(matlabroot,'extern','engines','python'))
+system('python.exe setup.py install')
+```
+- confirm by launching python and running:
+```
+import matlab.engine
+```
 
 ```shell
     $ pip install --user pipenv
