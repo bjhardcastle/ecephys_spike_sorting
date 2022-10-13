@@ -95,27 +95,15 @@ To leave the pipenv virtual environment, simply type:
 
 ### Windows
 
-Update - for no pipenv install:
+#### for no pipenv install:
 ```
     conda create -n sorting
     conda activate sorting
     conda install --name sorting --file spec-file.txt
     pip install -r requirements.txt
 ```
-For installing matlab engine:
-- find path to python.exe for the newly-created conda env 'sorting'
-- Properties>Compatibility> Run as admin
-- Launch Matlab 2021a as admin
-- In Matlab run the following, replacein python.exe with the full path to the 'sorting' env python.exe:
-```
-cd (fullfile(matlabroot,'extern','engines','python'))
-system('python.exe setup.py install')
-```
-- confirm by launching python and running:
-```
-import matlab.engine
-```
 
+#### with Pipenv:
 ```shell
     $ pip install --user pipenv
     $ set PIPENV_VENV_IN_PROJECT=1
@@ -137,6 +125,50 @@ To leave the pipenv virtual environment, simply type:
 ```shell
     (.venv) $ exit
 ```
+## installing matlab engine
+- find path to `python.exe` for the newly-created conda env 'sorting'
+- launch Matlab 2021a as admin
+- in Matlab, run the following, replacing the path to `python.exe` with the correct
+  location in the newly-created 'sorting' env:
+```
+cd (fullfile(matlabroot,'extern','engines','python'))
+system('C:\Users\svc_neuropix\Anaconda3\envs\sorting\python.exe setup.py install')
+```
+- confirm installation by launching python and running:
+```
+import matlab.engine
+```
+
+## Kilosort details to setup np pipeline (pre-2.0 tag)
+
+1. Download visual studio 2017 from this site: https://quasar.ugent.be/files/doc/cuda-msvc-compatibility.html. Follow the install directions described here: How do I install Visual Studio 2017 or 2019 for use with MATLAB/Simulink? - MATLAB Answers - MATLAB Central (mathworks.com)
+ 
+ 
+2. Download CUDA 11.0: https://developer.nvidia.com/cuda-11.0-download-archive?target_os=Windows&target_arch=x86_64&target_version=10&target_type=exelocal
+ 
+3. clone kilosort as follows:
+```
+    git clone https://github.com/MouseLand/Kilosort.git
+    cd Kilosort
+    git checkout 2fba667359dbddbb0e52e67fa848f197e44cf5ef
+```
+ 
+This last step will put you on the specific commit we used for the pipeline. If you'd like a more recent version, then don't do this. But, please be very careful since we don't want operators to sort on the wrong version accidentally.
+ 
+4. open matlab and navigate to kilosort/CUDA directory, then run `mexGPUall.m`
+
+## Additional executables 
+make sure to add the necessary executables necessary to run the ecephys
+pipeline. Easiest way is to copy them from the current sorting computers:
+    
+- median subtraction 
+https://github.com/AllenInstitute/ecephys_spike_sorting/tree/master/ecephys_spike_sorting/modules/median_subtraction/SpikeBandMedianSubtraction)
+
+- npx extractor (might not need this if you're running the latest open ephys and
+aren't recording to npx files) 
+https://github.com/AllenInstitute/ecephys_spike_sorting/tree/master/ecephys_spike_sorting/modules/extract_from_npx/NpxExtractor
+
+
 
 ## Level of Support
 
