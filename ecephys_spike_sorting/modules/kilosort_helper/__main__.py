@@ -63,7 +63,18 @@ def run_kilosort(args):
                                              input_file_forward_slash,
                                              args['ephys_params'], 
                                              args['kilosort_helper_params']['kilosort2_params'])
+    
+    elif args['kilosort_helper_params']['kilosort_version'] == 25:
 
+        shutil.copyfile(os.path.join('ecephys_spike_sorting','modules','kilosort_helper','main_kilosort25.m'),
+            os.path.join(args['kilosort_helper_params']['matlab_home_directory'],'main_kilosort25.m'))
+    
+        matlab_file_generator.create_config2(args['kilosort_helper_params']['matlab_home_directory'], 
+                                             output_dir_forward_slash, 
+                                             input_file_forward_slash,
+                                             args['ephys_params'], 
+                                             args['kilosort_helper_params']['kilosort25_params'])
+        
     elif args['kilosort_helper_params']['kilosort_version'] == 3:
 
         shutil.copyfile(os.path.join('ecephys_spike_sorting','modules','kilosort_helper','main_kilosort3.m'),
@@ -100,6 +111,9 @@ def run_kilosort(args):
     elif args['kilosort_helper_params']['kilosort_version'] == 2: 
         eng.kilosort2_config_file(nargout=0)
         eng.kilosort2_master_file(nargout=0)
+    elif args['kilosort_helper_params']['kilosort_version'] == 25: 
+        eng.kilosort2_config_file(nargout=0)
+        eng.main_kilosort25(nargout=0)
     elif args['kilosort_helper_params']['kilosort_version'] == 3:
         eng.kilosort3_config_file(nargout=0)
         eng.main_kilosort3(nargout=0)

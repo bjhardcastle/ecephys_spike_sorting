@@ -1,4 +1,4 @@
-import os, io, json, glob, sys
+import os, io, json, sys
 
 if sys.platform == 'linux':
     import pwd
@@ -134,11 +134,11 @@ def createInputJson(output_file,
         "kilosort_helper_params" : {
 
             "matlab_home_directory": "C:\\Users\\svc_neuropix\\Documents\\MATLAB",
-            "kilosort_repository": "C:\\Users\\svc_neuropix\\Documents\\GitHub\\kilosort2",
-            "kilosort_version" : 2,
+            "kilosort_repository": "C:\\Users\\svc_neuropix\\Documents\\GitHub\\Kilosort",
+            "kilosort_version" : 25,
             "surface_channel_buffer" : 15,
 
-            "kilosort2_params" :
+            "kilosort25_params" :
             {
                 "chanMap" : "'chanMap.mat'",
                 "fshigh" : 150,
