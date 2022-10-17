@@ -1610,6 +1610,8 @@ class processing_session():
 
         def log_out(p, logger):
             output_line_list = []
+            if not p:
+                return
             try:
                 p.stdout.seek(0,2)
                 pos = p.stdout.tell()
