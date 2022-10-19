@@ -92,24 +92,32 @@ class processing_session():
             # below: slot_params(slot_num,recording_dir,extracted_drive,backup1,backup2)
             pxi_slots[str(slot)] = slot_params(int(slot), os.path.join(params['acq_drive'], session_name+'_'+params['suffix']), processing_drive, default_backup1, default_backup2)#S
         
-        # use the last params set to determine if we have v0.6.0 data (no npx2) + folder structure (addtl subfolders)
-        # first check session dir exists (oephys v0.6.0 might not give us the expected folder names)
-        try_dir_path = os.path.join(params['acq_drive'], session_name+'_'+params['suffix'])
-        if not os.path.exists(try_dir_path):
-            # we may not have a '_probeABC' suffix where we need one - add it if necessary
-            try_short_dir_path = os.path.join(params['acq_drive'], session_name)
-            if os.path.exists(try_short_dir_path):
-                shutil.move(try_short_dir_path, os.path.join(try_dir_path))
-            if not os.path.exists(try_short_dir_path): # re-check after the rename                
-                print(f"not found {try_short_dir_path} or {try_dir_path}")
-                raise FileNotFoundError
+        # # use the last params set to determine if we have v0.6.0 data (no npx2) + folder structure (addtl subfolders)
+        # # first check session dir exists (oephys v0.6.0 might not give us the expected folder names)
+        # try_dir_path = os.path.join(params['acq_drive'], session_name+'_'+params['suffix'])
+        # if not os.path.exists(try_dir_path):
+        #     # we may not have a '_probeABC' suffix where we need one - add it if necessary
+        #     try_short_dir_path = os.path.join(params['acq_drive'], session_name)
+        #     if os.path.exists(try_short_dir_path):
+        #         shutil.move(try_short_dir_path, os.path.join(try_dir_path))
+        #     if not os.path.exists(try_short_dir_path): # re-check after the rename                
+        #         print(f"not found {try_short_dir_path} or {try_dir_path}")
+        #         raise FileNotFoundError
         
-        # check whether we have npx2 files in the session directory - an indicator of older ephys version
-        data_dirpath = os.path.join(params['acq_drive'], session_name+'_'+params['suffix'])
-        if glob.glob(os.path.join(data_dirpath,"**/*.npx2"), recursive=True):
+        for v in pxi_slots.values():
+            
+            # check whether we have npx2 files in the session directory - an indicator of older ephys version
+            data_dirpath = v[1] # recording_dir
+            if not os.path.exists(data_dirpath):
+                continue
+            if (
+                not glob.glob(os.path.join(data_dirpath,"**/*.npx2"), recursive=True)
+                and glob.glob(os.path.join(data_dirpath,"**/*.oebin"), recursive=True)
+            ):
+                print("open ephys raw data is uncompressed format from v0.6.x or later")
+                self.OEPHYS_v0_6_0 = True 
+                break
             self.OEPHYS_v0_6_0 = False
-        else:
-            self.OEPHYS_v0_6_0 = True 
 
             
         #print(pxi_slots)
