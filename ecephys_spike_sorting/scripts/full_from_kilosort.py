@@ -8,8 +8,8 @@ session_name = '2053709239_532246_20200930'#test_2019-07-25_18-16-48' #Fill in w
 probes_in = get_from_config('processable_probes')#['D', 'E', 'F']
 cortex_only = False
 
-start_module = 'kilosort_helper'
-end_module = 'cleanup'
+start_module = get_from_config('start_module',default='kilosort_helper')
+end_module = get_from_config('end_module',default='cleanup')
 
 #default_backup1 = os.path.join(get_from_config('network_backup', kwargs), session_name)
 #default_backup2 = get_from_config('disk_backup')
