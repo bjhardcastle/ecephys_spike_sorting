@@ -154,16 +154,14 @@ class processing_session():
            #'move_processed_for_phy',
         ]
         self.modules = get_from_kwargs('modules', kwargs, default=modules)
-        
         # extraction no longer necessary: v0.6.0 outputs to continuous.dat 
-        if self.OEPHYS_v0_6_0:
-            self.copy_v0_6_0_to_sorted_folder_structure(probes_in)
-            for item in ['extract_from_npx','restructure_directories']:
-                if item in self.modules:
-                    if item == default_start:
-                        default_start = self.modules[self.modules.index(item) + 1]
-                    self.modules.remove(item)
-            
+        # if self.OEPHYS_v0_6_0:
+        #     self.copy_v0_6_0_to_sorted_folder_structure(probes_in)
+        #     for item in ['extract_from_npx','restructure_directories']:
+        #         if item in self.modules:
+        #             if item == default_start:
+        #                 default_start = self.modules[self.modules.index(item) + 1]
+        #             self.modules.remove(item)
             
         start_num = self.modules.index(default_start)
         end_num = self.modules.index(default_end)
