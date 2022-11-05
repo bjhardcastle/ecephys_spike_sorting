@@ -297,32 +297,47 @@ class processing_session():
     def copy_v0_6_0_to_sorted_folder_structure(self,probes_in):
         finished = False
         
-        if set(probes_in).intersection({"A","B","C"}):
-            pxi_str = '2'
-        elif set(probes_in).intersection({"D","E","F"}):
-            pxi_str ='3'
-        
-        dirpath = self.pxi_slots[pxi_str][1]
-            
-        found = glob.glob(os.path.join(dirpath,"**/structure.oebin"), recursive=True)
-        if len(found) > 1:                
-            dir_size = []
-            for idx, dir in enumerate(found):
-                root_directory = os.path.dirname(dir)
-                dir_size.append(sum(f.stat().st_size for f in pathlib.Path(root_directory).glob('**/*') if pathlib.Path(f).is_file()))
-            max_size_idx = dir_size.index(max(dir_size))    
-        else:
-            max_size_idx = 0
-            
-        rec_root = os.path.dirname(found[max_size_idx])
-        dest_dir = pathlib.Path(self.pxi_slots[pxi_str].extracted_drive , self.session_name)
-        
         def move(src,dest):
-            if not pathlib.Path(dest).parent.exists():
-                pathlib.Path(dest).parent.mkdir(parents=True,exist_ok=True)
-            shutil.copy2(src,dest) 
+            src = pathlib.Path(src)
+            dest = pathlib.Path(dest)
+            if not dest.parent.exists():
+                dest.parent.mkdir(parents=True,exist_ok=True)
+            if (dest.exists() 
+                and src.stat().st_size == dest.stat().st_size
+                and src.stat().st_mtime == dest.stat().st_mtime
+            ):
+                return
+            shutil.copy2(str(src),str(dest)) 
+            
+        def get_dir_size(path) -> int:
+            root_directory = pathlib.Path(path).parent if os.path.isfile(path) else pathlib.Path(path)
+            return sum(f.stat().st_size for f in root_directory.glob('**/*') if f.is_file())
+        
+        probe_config = get_from_kwargs('probe_config',[])
+        
+        space_required = 0
+        pxi_slots = {probe_config[probe]['pxi_slot'] for probe in probes_in}
+        for raw_dir in [self.pxi_slots[slot][1] for slot in pxi_slots]:
+            print(raw_dir)
+            space_required += get_dir_size(raw_dir)
+        processing_drive = get_from_config('processing_drive','D:')
+        if space_required > psutil.disk_usage(processing_drive).free:
+            raise OSError(f'Not enough space to copy {space_required /1024**3 :.1f} GB to {processing_drive}') from None
+        else:
+            print(f'Enough space to copy {space_required /1024**3 :.1f} GB to {processing_drive}')
         
         for probe in probes_in:
+            pxi_str = probe_config[probe]['pxi_slot']
+            dirpath = self.pxi_slots[pxi_str][1]
+            found = glob.glob(os.path.join(dirpath,"**/structure.oebin"), recursive=True)
+            if len(found) > 1:
+                dir_sizes = [get_dir_size(path) for path in found]
+                max_size_idx = dir_sizes.index(max(dir_sizes))    
+            else:
+                max_size_idx = 0
+            rec_root = os.path.dirname(found[max_size_idx])
+            dest_dir = pathlib.Path(self.pxi_slots[pxi_str].extracted_drive , self.session_name)
+            
             try:    
                 print(f"copying v0.6.0 probe{probe} data...")
                 src = Rf"{rec_root}\continuous\Neuropix-PXI-100.Probe{probe}-AP\continuous.dat"
