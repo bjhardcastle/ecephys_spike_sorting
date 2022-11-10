@@ -37,8 +37,8 @@ from helpers.check_data_processing import (check_all_space,
 # from zro import RemoteObject, Proxy # unused - not installed on sorting pc (sorting conda env)
 
 
-session = '2021-02-09_546513'
-probes_in = ['A', 'B', 'C', 'D', 'E', 'F']
+session = '1044026583_509811_20200818_probeDEF'
+probes_in = ['A', 'C', 'E']
 probe_type = 'PXI'
 acq_system = 'PXI'
 class processing_session():
@@ -105,19 +105,26 @@ class processing_session():
         #         print(f"not found {try_short_dir_path} or {try_dir_path}")
         #         raise FileNotFoundError
         
+        # determine if we have v0.6.0 data (no npx2) + folder structure (addtl subfolders)
         for v in pxi_slots.values():
             
             # check whether we have npx2 files in the session directory - an indicator of older ephys version
-            data_dirpath = v[1] # recording_dir
-            if not os.path.exists(data_dirpath):
+            data_dirpath = pathlib.Path(v[1]) # recording_dir
+            if not data_dirpath.exists():
+                # we may not have a '_probeABC' suffix where we need one - add it if necessary
+                try_short_dir_path = pathlib.Path(data_dirpath).parent / session_name
+                if try_short_dir_path.exists():
+                    shutil.move(str(try_short_dir_path), data_dirpath)
+                # if not try_short_dir_path.exists(): # re-check after the rename                
+                #     raise FileNotFoundError(f"not found {try_short_dir_path} or {data_dirpath}")
+            if not data_dirpath.exists():
                 continue
             if (
-                not glob.glob(os.path.join(data_dirpath,"**/*.npx2"), recursive=True)
-                and glob.glob(os.path.join(data_dirpath,"**/*.oebin"), recursive=True)
-                and not self.sahar_sorted_data
+                not list(data_dirpath.rglob("**/*.npx2"))
+                and list(data_dirpath.rglob("**/*.oebin"))
             ):
                 print("open ephys raw data is uncompressed format from v0.6.x or later")
-                self.OEPHYS_v0_6_0 = True
+                self.OEPHYS_v0_6_0 = True 
                 break
             self.OEPHYS_v0_6_0 = False
             
@@ -333,7 +340,7 @@ class processing_session():
             if not pathlib.Path(dest).parent.exists():
                 pathlib.Path(dest).parent.mkdir(parents=True,exist_ok=True)
             shutil.copy2(str(src),str(dest)) 
-        
+            
         for index, probe_letter in enumerate(probes_in):
             probe_ap_index = index*2
             probe_lfp_index = probe_ap_index+1
@@ -381,20 +388,20 @@ class processing_session():
                 src= events_probe_folder / "timestamps.npy"
                 dest= fR"{dest_dir}_probe{probe_letter}_sorted\events\Neuropix-PXI-100.0\TTL_1\event_timestamps.npy"
                 move(src,dest)
-                
+
                 try:
                     # adjust the events sample_numbers AKA event_timestamps
                     # see https://gist.github.com/bjhardcastle/e972d59f482a549f312047221cd8eccb
                     file = rec_root / "sync_messages.txt"
                     with open(file, 'r') as f:
                         lines = f.readlines()
-                    
+        
                     first_sample = int(lines[index*2 + 1].split('start time: ')[-1].split('@30')[0].rstrip())
-                    
+        
                     file = fR"{dest_dir}_probe{probe_letter}_sorted\events\Neuropix-PXI-100.0\TTL_1\event_timestamps.npy"
                     with open(file,'rb') as f:
                         event_timestamps = np.load(f)
-                        
+        
                     event_timestamps -= first_sample
                     with open(file,'wb') as f:
                         np.save(f, event_timestamps)
@@ -431,21 +438,21 @@ class processing_session():
         elif set(probes_in).intersection({"D","E","F"}):
             pxi_str ='3'
         
-        dirpath = self.pxi_slots[pxi_str][1]
+            dirpath = self.pxi_slots[pxi_str][1]
             
-        found = glob.glob(os.path.join(dirpath,"**/structure.oebin"), recursive=True)
-        if len(found) > 1:                
-            dir_size = []
-            for idx, dir in enumerate(found):
-                root_directory = os.path.dirname(dir)
-                dir_size.append(sum(f.stat().st_size for f in pathlib.Path(root_directory).glob('**/*') if pathlib.Path(f).is_file()))
-            max_size_idx = dir_size.index(max(dir_size))    
-        else:
-            max_size_idx = 0
+            found = glob.glob(os.path.join(dirpath,"**/structure.oebin"), recursive=True)
+            if len(found) > 1:
+                dir_size = []
+                for idx, dir in enumerate(found):
+                    root_directory = os.path.dirname(dir)
+                    dir_size.append(sum(f.stat().st_size for f in pathlib.Path(root_directory).glob('**/*') if pathlib.Path(f).is_file()))
+                max_size_idx = dir_size.index(max(dir_size))    
+            else:
+                max_size_idx = 0
             
-        rec_root = os.path.dirname(found[max_size_idx])
-        dest_dir = pathlib.Path(self.pxi_slots[pxi_str].extracted_drive , self.session_name)
-        
+            rec_root = os.path.dirname(found[max_size_idx])
+            dest_dir = pathlib.Path(self.pxi_slots[pxi_str].extracted_drive , self.session_name)
+            
         def move(src,dest):
             if not pathlib.Path(dest).parent.exists():
                 pathlib.Path(dest).parent.mkdir(parents=True,exist_ok=True)
@@ -499,7 +506,6 @@ class processing_session():
                 logging.error(f"failed to copy v0.6.0 files to sorted folders for probe{probe}", exc_info=True)
                 finished = False
         return finished     
-     
     
     def create_file_handler(self, level_string,level_idx,limsID,probe):
         file_name = limsID+'_'+datetime.datetime.now().strftime("%y.%m.%d.%I.%M.%S")+'_'+level_string+'_'+probe+".log"
@@ -639,7 +645,7 @@ class processing_session():
         probe_list = self.probes_per_slot()[slot_p]
         dirname = self.raw_dirname(probe)+'_extracted'#+'_probe'+('').join(probe_list)
         path = os.path.join(self.sorted_drive(probe), dirname)
-        if self.OEPHYS_v0_6_0 or self.sahar_sorted_data:
+        if self.OEPHYS_v0_6_0:
             dirpath = self.raw_path(probe) # data are already "extracted"
             found = glob.glob(os.path.join(dirpath,"**/structure.oebin"), recursive=True)
             if len(found) > 1:                
@@ -1545,7 +1551,7 @@ class processing_session():
                 probe_info = probe_json['probe']
             else:
                 probe_info = {
-                    "phase" : "3a", 
+                    "phase" : "1.0", 
                     "ap gain" : get_settings_xml_value(probe, probe_element, 'apGainValue',"500x"),
                     "lfp gain" : get_settings_xml_value(probe, probe_element, 'lfpGainValue',"250x"),
                     "reference channel" : get_settings_xml_value(probe, probe_element, 'referenceChannel',"Ext"),
@@ -1557,14 +1563,14 @@ class processing_session():
 
                     "subprocessors" :[
                         {
-                            "name" : "Neuropix-3a-100.0",
+                            "name" : "Neuropix-PXI-100.0",
                             "type" : "AP band",
                             "num channels" : 384,
                             "sample_rate" : 30000.0,
                             "bit volts" : 0.195
                         },
                         {
-                            "name" : "Neuropix-3a-100.1",
+                            "name" : "Neuropix-PXI-100.1",
                             "type" : "LFP band",
                             "num channels" : 384,
                             "sample_rate" : 2500.0,
@@ -1573,6 +1579,14 @@ class processing_session():
                     ]
 
                 }  
+            
+            probe_ref_channels_dict = {
+                "3a": [36, 75, 112, 151, 188, 227, 264, 303, 340, 379],
+                "1.0": [191],
+                "ultra": [191],
+            }
+            probe_info['reference_channels'] = probe_ref_channels_dict.get(self.probe_type.lower(),[])
+            
             #print(software_info, probe_info )
             return software_info, probe_info             
 
