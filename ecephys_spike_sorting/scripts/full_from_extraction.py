@@ -5,7 +5,7 @@ import sys
 
 
 session_name = '2053709239_532246_20200930'#test_2019-07-25_18-16-48' #Fill in with appropriate session name
-probes_in = get_from_config('processable_probes')#['D', 'E', 'F']
+default_probes_in = 'ABCDEF' # in case not passed in from sys.arg
 cortex_only = False
 
 start_module = get_from_config('start_module')
@@ -64,19 +64,23 @@ final_copy_all_parallel = [
 
 
 if __name__ == '__main__':
-  try:
-    session_name = sys.argv[1]
-  except Exception as E:
-    print('No arguments found in sys call, using session name from py file instead')
-  processor = processing_session(
-    session_name, 
-    probes_in, 
-    cortex_only=cortex_only,
-    modules=modules,
-    copy_while_waiting_modules=copy_while_waiting_modules,
-    final_copy_all_parallel=final_copy_all_parallel,
-    start_module = start_module,
-    end_module = end_module
+    if not sys.argv[1:]:
+        raise ValueError("Session foldername required")
+    session_name, *probes_in = sys.argv[1:]  
+    if probes_in and all(letters in 'ABCDEF' for letters in probes_in):
+        probes_in = ''.join(probes_in).strip(' ')
+    else: 
+        probes_in = default_probes_in
+    print(f'Processing probes {probes_in}')
+    processor = processing_session(
+        session_name, 
+        probes_in, 
+        cortex_only=cortex_only,
+        modules=modules,
+        copy_while_waiting_modules=copy_while_waiting_modules,
+        final_copy_all_parallel=final_copy_all_parallel,
+        start_module = start_module,
+        end_module = end_module
     )
-  processor.start_processing()
+    processor.start_processing()
 

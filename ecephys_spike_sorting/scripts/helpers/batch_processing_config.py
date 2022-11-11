@@ -1,7 +1,6 @@
 from collections import namedtuple, OrderedDict
 
 config = {
-    'processable_probes': ['D','E','F'],#, 'B', 'C', 'D', 'E'],# 'B', 'C', 'D', 'E', 'F'],#'B','C'],
 	'probe_type': 'PXI', #Use PXI here for 1.0 probes, 'Ultra' for ultra probes
     'acq_system': 'PXI',
 	'WSE_computer': 'W10DTSM18306',

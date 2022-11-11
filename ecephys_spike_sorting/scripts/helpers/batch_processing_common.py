@@ -164,7 +164,7 @@ class processing_session():
         self.modules = self.modules[start_num:end_num+1]
 
         # moved the following sections from eariler so that default_start will be applied to probes too
-        processable_probes = get_from_kwargs('processable_probes', kwargs)
+        processable_probes = get_from_config('processable_probes', 'ABCDEF')
 
         probes_to_process = [probe for probe in probes_in if probe in processable_probes]
         probe_config = get_from_kwargs('probe_config', kwargs)
