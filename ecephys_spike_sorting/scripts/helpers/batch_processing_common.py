@@ -68,8 +68,8 @@ class processing_session():
 
         default_backup1 = os.path.join(get_from_kwargs('network_backup', kwargs), session_name)
         default_backup2 = get_from_kwargs('disk_backup', kwargs)
-        default_start = get_from_config('start_module', kwargs)
-        default_end = get_from_config('end_module', kwargs)
+        default_start = get_from_config('start_module', get_from_kwargs('start_module',kwargs))
+        default_end = get_from_config('end_module', get_from_kwargs('start_module',kwargs))
 
         slot_config = get_from_kwargs('slot_config', kwargs)
 
