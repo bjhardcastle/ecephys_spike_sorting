@@ -240,12 +240,12 @@ def check_data_processing(probe_type, npx_directory, local_sort_dir, raw_backup_
                     try:
                         computer, x = os.path.splitdrive(lims_upload_location)
                         #print(computer)
-                        computer = r"\\" + computer.split('\\')[2]
+                        # computer = r"\\" + computer.split('\\')[2]
                         #print(computer)
                     except Exception as E:
                         computer = ''
                         logging.error('Failed to get lims upload computer, keeping local instead', exc_info=True)
-                    new_dir = os.path.join(computer,'d','finalized_sorted_data',dirname, relpath)
+                    new_dir = os.path.join(computer,'finalized_sorted_data',dirname, relpath)
                     #print(new_dir)
                     if not(os.path.exists(new_dir)):
                         os.makedirs(new_dir)
