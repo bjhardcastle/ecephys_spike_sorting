@@ -299,6 +299,7 @@ class processing_session():
             if (dest.exists() 
                 and src.stat().st_size == dest.stat().st_size
                 and src.stat().st_mtime == dest.stat().st_mtime
+                and dest.name != 'event_timestamps.npy' # always copy the original, which will be adjusted
             ):
                 return
             shutil.copy2(str(src),str(dest)) 
