@@ -102,8 +102,6 @@ class processing_session():
                 try_short_dir_path = pathlib.Path(data_dirpath).parent / session_name
                 if try_short_dir_path.exists():
                     shutil.move(str(try_short_dir_path), data_dirpath)
-                if not try_short_dir_path.exists(): # re-check after the rename                
-                    raise FileNotFoundError(f"not found {try_short_dir_path} or {data_dirpath}")
             if not data_dirpath.exists():
                 continue
             if (
@@ -112,8 +110,8 @@ class processing_session():
             ):
                 print("open ephys raw data is uncompressed format from v0.6.x or later")
                 self.OEPHYS_v0_6_0 = True 
-                break
-            self.OEPHYS_v0_6_0 = False
+            else:
+                self.OEPHYS_v0_6_0 = False
 
             
         #print(pxi_slots)
