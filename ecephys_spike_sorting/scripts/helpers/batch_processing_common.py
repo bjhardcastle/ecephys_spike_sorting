@@ -68,8 +68,8 @@ class processing_session():
 
         default_backup1 = os.path.join(get_from_kwargs('network_backup', kwargs), session_name)
         default_backup2 = get_from_kwargs('disk_backup', kwargs)
-        default_start = get_from_config('start_module', get_from_kwargs('start_module',kwargs))
-        default_end = get_from_config('end_module', get_from_kwargs('start_module',kwargs))
+        default_start = get_from_kwargs('start_module', kwargs, get_from_config('start_module'))
+        default_end = get_from_kwargs('end_module', kwargs, get_from_config('end_module'))
 
         slot_config = get_from_kwargs('slot_config', kwargs)
 
@@ -760,7 +760,7 @@ class processing_session():
             except:
                 backup_size_dict[sorted_drive] = max_c_space_needed
             if psutil.disk_usage(sorted_drive).free < backup_size_dict[sorted_drive]: #TODO make this flexible - it only works since extraction and processing are both on D
-                err_str = 'There is not enough space on the processing drive (usually D but check config) for kilosort to process the largest dataset'
+                err_str = f'There is not enough space ({psutil.disk_usage(sorted_drive).free / 1024**3:.1f} GB) on the processing drive ({sorted_drive}) for kilosort to process the largest dataset ({backup_size_dict[sorted_drive] / 1024 **3:.1f} GB)'
                 print(err_str)
                 raise ValueError(err_str)
             else: print('There appears to be enough space on the sorting drive '+str(sorted_drive)+ ' for kilosort')

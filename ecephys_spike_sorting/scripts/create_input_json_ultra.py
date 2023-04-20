@@ -21,6 +21,7 @@ def createInputJsonUltra(output_file,
                     lfp_directory=None,
                     kilosort_output_directory=None, 
                     kilosort_output_tmp=None, 
+                    trange = '[0 inf]',
                     probe_type='Ultra'):
 
     if kilosort_output_directory is None \
@@ -143,7 +144,7 @@ def createInputJsonUltra(output_file,
                 "minFR": 0.02,
                 "minfr_goodchannels": 0.1,
                 "momentum": "[20 400]",
-                "nNeighbors": 96,
+                "nNeighbors": 32,
                 "nPCs": 3,
                 "nSkipCov": 25,
                 "nfilt_factor": 4,
