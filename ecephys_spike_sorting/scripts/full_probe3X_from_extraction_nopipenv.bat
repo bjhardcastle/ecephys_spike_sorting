@@ -5,7 +5,7 @@ cd C:\Users\svc_neuropix\Documents\GitHub\ecephys_spike_sorting
 setlocal EnableDelayedExpansion
 set session=%1
 echo received input %session% %2
-if "%~1" == "" set /p session=Full session name plus optional probe list [default: ABCDEF]:
+if "%~1" == "" set /p session=Full session name plus optional probe list [default: ABCDEF]: 
 ECHO activating environment and starting ecephys_spike_sorting\scripts\full_from_extraction.py
 call "C:\Users\svc_neuropix\Anaconda3\Scripts\activate.bat" "C:\Users\svc_neuropix\Anaconda3"
 call conda activate sorting
