@@ -13,7 +13,10 @@ def download_session_to_acq_drives(session: str | int | np_session.Session, prob
             if not any(probe_letter in folder_suffix for probe_letter in probe_letters):
                 continue
             probe_folder_on_network = network_path / f'{session.folder}_probe{folder_suffix}'
-            if not len(tuple(probe_folder_on_network.rglob('*continuous.dat'))) == 6:
+            if not (
+                len(tuple(probe_folder_on_network.rglob('*continuous.dat'))) == 6
+                or len(tuple(probe_folder_on_network.rglob('*npx2'))) > 0
+            ):
                 continue
             probe_folder_on_acq_drive = f'{drive}\\{session.folder}_probe{folder_suffix}'
             if probe_folder_on_network.exists():
